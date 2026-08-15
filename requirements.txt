@@ -1,0 +1,4 @@
+# The engine itself is pure standard library and needs nothing.
+# These are only for the disposable CLI and the tests.
+rich>=13.0
+pytest>=7.0

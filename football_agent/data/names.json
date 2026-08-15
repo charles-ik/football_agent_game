@@ -1,0 +1,27 @@
+{
+  "_comment": "Fictional name pools. Players are generated at world creation from region-flavoured pools, so no real likenesses appear anywhere in the game.",
+  "first_names": [
+    "Adam", "Alfie", "Archie", "Arlo", "Ben", "Billy", "Blake", "Brandon", "Callum", "Cameron",
+    "Charlie", "Connor", "Corey", "Dan", "Darren", "Declan", "Dominic", "Dylan", "Elliot", "Ethan",
+    "Ewan", "Finn", "Frankie", "Gareth", "George", "Harvey", "Isaac", "Jacob", "Jake", "Jamie",
+    "Jared", "Jay", "Joel", "Jonah", "Jordan", "Josh", "Kai", "Keiran", "Kyle", "Leon",
+    "Lewis", "Liam", "Logan", "Louis", "Luca", "Mason", "Max", "Micah", "Nathan", "Noah",
+    "Oliver", "Owen", "Reece", "Reuben", "Riley", "Rory", "Ryan", "Sam", "Scott", "Seb",
+    "Shay", "Sonny", "Spencer", "Stefan", "Theo", "Toby", "Tomas", "Tyler", "Vince", "Zach"
+  ],
+  "surnames_common": [
+    "Ainsworth", "Arkwright", "Barlowe", "Bexley", "Braddock", "Calloway", "Carrick", "Chadwick",
+    "Corliss", "Denby", "Draycott", "Eastwick", "Fairbrass", "Fenner", "Garrick", "Halsey",
+    "Hargrave", "Havelock", "Ingram", "Kellaway", "Larkin", "Loxley", "Maddox", "Marchant",
+    "Merrick", "Norwood", "Oakley", "Palgrave", "Penrose", "Quill", "Ransome", "Redfern",
+    "Rothwell", "Selby", "Sharrock", "Stannard", "Thackery", "Tolhurst", "Vance", "Wardle",
+    "Weatherby", "Whitlock", "Winstanley", "Yardley"
+  ],
+  "surnames_by_region": {
+    "capital":   ["Ashcombe", "Beaumont", "Carrow", "Devereux", "Follett", "Hastings", "Lanyon", "Montrose", "Pellow", "Sinclair"],
+    "north":     ["Bramhall", "Crompton", "Entwistle", "Greenhalgh", "Haworth", "Kershaw", "Ogden", "Ramsbottom", "Shackleton", "Wolstenholme"],
+    "midlands":  ["Bagnall", "Coleshill", "Draycote", "Frampton", "Hatherley", "Lindop", "Malkin", "Onions", "Prestidge", "Salt"],
+    "northeast": ["Blenkinsop", "Charlton", "Dodds", "Fenwick", "Gascoigne", "Hetherington", "Milburn", "Nixon", "Robson", "Sowerby"],
+    "east":      ["Barwick", "Chettle", "Doggett", "Emeny", "Gotobed", "Hurrell", "Loveday", "Nunn", "Rudd", "Sizer"]
+  }
+}

@@ -1,0 +1,197 @@
+{
+  "_comment": "Every tunable number in the game. Tuning is editing this file and re-running the harness; the engine hardcodes nothing. A future Swift port inherits these as data.",
+
+  "calendar": {
+    "weeks_per_season": 52,
+    "match_week_start": 9,
+    "match_week_end": 46,
+    "windows": [[1, 10], [28, 31]],
+    "window_names": {"1": "Summer window", "28": "Winter window"}
+  },
+
+  "start": {
+    "cash": 75000,
+    "reputation": 12,
+    "hq_level": 1,
+    "starting_scouts": 1,
+    "starting_scout_quality": [38, 52],
+    "starting_client_tier": 2,
+    "starting_client_ability": [52, 60],
+    "starting_client_commission": 0.08,
+    "agent_contract_years": 2
+  },
+
+  "hq_levels": [
+    {"level": 1, "name": "One-room office",   "scout_cap": 1, "client_cap": 5,  "precision_bonus": 0.00, "weekly_cost": 180,   "upgrade_cost": 45000},
+    {"level": 2, "name": "High-street suite", "scout_cap": 2, "client_cap": 9,  "precision_bonus": 0.08, "weekly_cost": 620,   "upgrade_cost": 140000},
+    {"level": 3, "name": "City-centre floor", "scout_cap": 4, "client_cap": 14, "precision_bonus": 0.16, "weekly_cost": 1900,  "upgrade_cost": 420000},
+    {"level": 4, "name": "Riverside HQ",      "scout_cap": 6, "client_cap": 20, "precision_bonus": 0.24, "weekly_cost": 6200,  "upgrade_cost": 1200000},
+    {"level": 5, "name": "Global agency",     "scout_cap": 9, "client_cap": 28, "precision_bonus": 0.34, "weekly_cost": 15000, "upgrade_cost": 0}
+  ],
+
+  "finance": {
+    "retainer_pct_of_wage": 0.075,
+    "insolvency_warning_weeks": 2,
+    "insolvency_downsize_weeks": 4,
+    "insolvency_game_over_weeks": 10,
+    "downsize_reputation_hit": 4.0,
+    "scout_hire_cost_multiplier": 6.0
+  },
+
+  "economy": {
+    "wage_base": 300,
+    "wage_growth": 1.115,
+    "wage_pivot": 35,
+    "wage_tier_multiplier": {"1": 1.35, "2": 0.8, "0": 0.5},
+    "wage_min": 180,
+    "fee_base": 26000,
+    "fee_growth": 1.16,
+    "fee_pivot": 40,
+    "fee_age_peak": 24,
+    "fee_age_penalty": 0.048,
+    "fee_contract_min": 0.22,
+    "fee_contract_full_weeks": 156
+  },
+
+  "commission": {
+    "min_pct": 0.03,
+    "max_pct": 0.20,
+    "fee_weight": 0.26,
+    "wage_weight": 0.09,
+    "renewal_multiplier": 0.55,
+    "free_transfer_signing_bonus_weeks": 26
+  },
+
+  "negotiation": {
+    "max_rounds": 3,
+    "walkaway_base": 0.30,
+    "walkaway_slope": 2.2,
+    "irritation_per_round": 0.35,
+    "counter_concession": 0.30,
+    "hint_bands": [0.03, 0.10, 0.22],
+    "reputation_threshold_weight": 0.35,
+    "hidden_bias": 0.10,
+    "club_reputation_weight": 0.25
+  },
+
+  "signing": {
+    "base_threshold_pct": 0.06,
+    "reputation_bonus_pct": 0.11,
+    "trait_threshold_mod": {"ambitious": 0.01, "mercenary": -0.02, "loyal": 0.015, "professional": 0.0},
+    "min_reputation_to_approach": {"tier1": 45, "tier2": 0},
+    "approach_ability_pivot": 48,
+    "approach_rep_factor": 1.15,
+    "approach_tier1_bonus": 10,
+    "cooldown_weeks": 10,
+    "trust_threshold_bonus": 0.15,
+    "reputation_gain_per_signing": 0.4,
+    "quality_reputation_factor": 0.05
+  },
+
+  "scouting": {
+    "base_discovery_chance": 0.12,
+    "quality_discovery_factor": 0.006,
+    "star_discovery_factor": 0.03,
+    "initial_ability_spread": 34.0,
+    "initial_potential_spread": 44.0,
+    "min_ability_spread": 2.5,
+    "min_potential_spread": 6.0,
+    "narrow_per_week_base": 0.055,
+    "narrow_quality_factor": 0.0011,
+    "narrow_reputation_factor": 0.0009,
+    "narrow_region_scout_factor": 0.022,
+    "narrow_hq_precision_factor": 0.09,
+    "focus_multiplier": 2.1,
+    "report_stale_weeks": 60,
+    "region_ability_mode_base": 38.0,
+    "region_ability_star_factor": 5.5,
+    "region_potential_bonus": [4, 26]
+  },
+
+  "development": {
+    "peak_age": 27,
+    "decline_age": 31,
+    "retire_age": 36,
+    "retire_chance_per_year_over": 0.22,
+    "growth_rate": 0.030,
+    "decline_rate": 0.022,
+    "playing_time_multiplier": {"key": 1.25, "starter": 1.0, "rotation": 0.55, "fringe": 0.15, "reserve": -0.15},
+    "injury_chance_per_week": 0.006,
+    "injury_weeks_range": [2, 22],
+    "injury_growth_penalty": 0.6
+  },
+
+  "playing_time": {
+    "thresholds": {"key": 1.06, "starter": 0.96, "rotation": 0.86, "fringe": 0.76},
+    "expected_by_trait": {"ambitious": "starter", "mercenary": "rotation", "loyal": "rotation", "professional": "starter"}
+  },
+
+  "trust": {
+    "start": 60.0,
+    "min": 0.0,
+    "max": 100.0,
+    "weekly_playing_time_delta": {"key": 0.30, "starter": 0.15, "rotation": -0.05, "fringe": -0.35, "reserve": -0.65},
+    "stagnation_weeks": 60,
+    "stagnation_penalty": 0.25,
+    "tenure_stabiliser_per_season": 0.12,
+    "agency_size_stabiliser": 0.010,
+    "leave_threshold": 18.0,
+    "leave_chance_below_threshold": 0.16,
+    "good_move_bonus": 14.0,
+    "bad_move_penalty": 24.0,
+    "greedy_deal_penalty": 14.0,
+    "failed_promise_penalty": 7.0,
+    "renewal_bonus": 6.0,
+    "wage_rise_bonus_factor": 9.0,
+    "trait_sensitivity": {"ambitious": 1.25, "mercenary": 1.0, "loyal": 0.6, "professional": 0.85}
+  },
+
+  "transfers": {
+    "interest_base_chance": 0.055,
+    "interest_ability_factor": 0.0022,
+    "interest_reputation_factor": 0.0016,
+    "seeking_move_multiplier": 2.4,
+    "transfer_listed_multiplier": 2.0,
+    "interest_ttl_weeks": 4,
+    "min_weeks_at_club_for_interest": 44,
+    "max_open_interests_per_client": 3,
+    "contract_expiry_warning_weeks": 26,
+    "transfer_list_chance_fringe": 0.030,
+    "wage_offer_ceiling_factor": 1.35,
+    "fee_ability_factor": 26000,
+    "fee_age_penalty": 0.055,
+    "fee_contract_factor": 0.9,
+    "renewal_chance_key_player": 0.10,
+    "reputation_gain_per_transfer": 0.7,
+    "reputation_gain_tier1_bonus": 1.0,
+    "min_ability_gap_for_interest": -14
+  },
+
+  "rivals": {
+    "count": 6,
+    "snap_up_base_chance": 0.015,
+    "snap_up_quality_factor": 0.0005,
+    "snap_up_visibility_cap": 1.5,
+    "poach_trust_threshold": 40.0,
+    "poach_base_chance": 0.05,
+    "poach_reputation_factor": 0.0025
+  },
+
+  "league": {
+    "home_advantage": 4.0,
+    "goal_base": 1.35,
+    "strength_goal_factor": 0.030,
+    "promotion_places": 3,
+    "relegation_places": 3
+  },
+
+  "reputation": {
+    "min": 0.0,
+    "max": 100.0,
+    "weekly_decay": 0.012,
+    "gain_falloff_exponent": 0.9,
+    "client_loss_penalty": 1.5,
+    "bankruptcy_penalty": 8.0,
+    "elite_threshold": 75.0
+  }
+}

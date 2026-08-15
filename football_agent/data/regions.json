@@ -1,0 +1,45 @@
+{
+  "country": "Albion",
+  "regions": [
+    {
+      "id": "capital",
+      "name": "The Capital",
+      "country": "Albion",
+      "star_rating": 5.0,
+      "scouting_cost": 520,
+      "pool_size": 55
+    },
+    {
+      "id": "north",
+      "name": "The North",
+      "country": "Albion",
+      "star_rating": 4.0,
+      "scouting_cost": 380,
+      "pool_size": 48
+    },
+    {
+      "id": "midlands",
+      "name": "The Midlands",
+      "country": "Albion",
+      "star_rating": 3.5,
+      "scouting_cost": 300,
+      "pool_size": 44
+    },
+    {
+      "id": "northeast",
+      "name": "The Northeast",
+      "country": "Albion",
+      "star_rating": 3.0,
+      "scouting_cost": 230,
+      "pool_size": 38
+    },
+    {
+      "id": "east",
+      "name": "The East",
+      "country": "Albion",
+      "star_rating": 2.5,
+      "scouting_cost": 170,
+      "pool_size": 34
+    }
+  ]
+}
