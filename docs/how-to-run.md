@@ -78,11 +78,47 @@ must land deals.
 
 ---
 
+## Play in the browser
+
+The web UI is a thin Next.js front end over a FastAPI service that wraps the
+engine. The engine holds every rule; the browser holds no game state beyond an
+opaque session cookie.
+
+```bash
+# one-time setup
+python3 -m pip install -r requirements-api.txt
+cd web && npm install && cd ..
+
+# every session: two terminals, or one `make dev`
+make api          # FastAPI on http://127.0.0.1:8000
+make web          # Next.js on http://localhost:3000
+```
+
+Then open **http://localhost:3000**. Start a new agency (note the seed — same
+seed, same world), assign your scout, and press **Continue**. Keyboard: `C`
+continues, `1`–`6` switch screens, `Esc` closes dialogs.
+
+The rules and numbers are identical to the CLI — the API drives
+`engine/actions.py` and nothing else. Two consequences of the architecture
+worth knowing:
+
+* The API is single-process by design (`--workers 1` is load-bearing) and
+  binds to localhost. Sessions and live negotiations are in-memory.
+* A negotiation left open across a Continue lapses — the attempt is already
+  spent, exactly as in the CLI.
+
 ## Run the tests
 
 ```bash
 python3 -m pytest tests/ -q
 ```
+
+Alongside the engine tests there are three API guards:
+`tests/test_api_contract.py` (endpoints and the refusal model),
+`tests/test_api_leaks.py` (no ability, potential, threshold or seed key appears
+in any response), and `tests/test_api_parity.py` (same seed, same decisions via
+HTTP and via `engine.actions`, identical worlds).
+
 
 Roughly 50 tests covering the negotiation resolver, RNG determinism, save/load
 round-tripping, the economy curves, playing time, trust, the insolvency spiral,

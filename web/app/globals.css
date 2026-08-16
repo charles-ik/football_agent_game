@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/*
+ * The game's voice is dry, terse and a little cold. The UI is an operator's
+ * console: deep ink background, off-white text, a single cold accent (signal
+ * cyan) for anything that needs a decision, amber for warnings, red for
+ * critical — matching the engine's Severity one-to-one.
+ */
+@theme {
+  --color-ink: #0b0e13;
+  --color-panel: #11151c;
+  --color-panel-2: #161b24;
+  --color-line: #232a36;
+  --color-fg: #e6e9ee;
+  --color-dim: #8b94a3;
+  --color-faint: #5b6371;
+  --color-accent: #38d6e0;
+  --color-accent-dim: #1d7a82;
+  --color-good: #4ade80;
+  --color-warn: #f0b44a;
+  --color-bad: #f05d5d;
+}
+
+html,
+body {
+  background: var(--color-ink);
+  color: var(--color-fg);
+  font-family:
+    ui-sans-serif,
+    -apple-system,
+    "SF Pro Text",
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  font-size: 14px;
+}
+
+/* Density over whitespace: numbers sit in columns, digits never shift width. */
+.num,
+td,
+th {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Severity palette — every colour-coded state also carries text or an icon. */
+.sev-info { color: var(--color-dim); }
+.sev-good { color: var(--color-good); }
+.sev-warning { color: var(--color-warn); }
+.sev-critical { color: var(--color-bad); }
+.sev-action { color: var(--color-accent); }
+
+.dot-info { background: var(--color-dim); }
+.dot-good { background: var(--color-good); }
+.dot-warning { background: var(--color-warn); }
+.dot-critical { background: var(--color-bad); }
+.dot-action { background: var(--color-accent); }
+
+::selection {
+  background: var(--color-accent-dim);
+}
+
+/* Thin scrollbars for dense panels */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 4px;
+}

@@ -212,3 +212,51 @@ def test_season_numbering_rolls_over(balance):
     assert cal.season_number(balance, per) == 1
     assert cal.season_number(balance, per + 1) == 2
     assert cal.season_week(balance, per + 1) == 1
+
+
+# ---------------------------------------------------------------------------
+# Read-only action probes (the API renders these; they must not mutate)
+# ---------------------------------------------------------------------------
+
+
+def test_can_upgrade_hq_mirror_upgrade_hq(world, balance):
+    from football_agent.engine import actions as A
+
+    ok, reason = A.can_upgrade_hq(world, balance)
+    assert ok, reason
+    cash_before = world.agency.cash
+    assert A.upgrade_hq(world, balance).ok
+    assert world.agency.cash == cash_before - balance.l("hq_levels")[0]["upgrade_cost"]
+
+    # Refusal path: same message from probe and action.
+    world.agency.cash = 0.0
+    ok, reason = A.can_upgrade_hq(world, balance)
+    assert not ok
+    result = A.upgrade_hq(world, balance)
+    assert not result.ok
+    assert result.message == reason
+
+
+def test_can_renew_mirror_open_renewal(world, balance):
+    from football_agent.engine import actions as A
+
+    player_id = next(iter(world.clients))
+    record = world.clients[player_id]
+
+    ok, reason = A.can_renew(world, balance, player_id)
+    assert not ok  # years left on the agreement
+    assert "weeks" in reason
+
+    record.agent_contract.expires_week = world.week + 10
+    record.trust = 80.0
+    ok, _ = A.can_renew(world, balance, player_id)
+    assert ok
+
+    record.trust = 5.0
+    ok, reason = A.can_renew(world, balance, player_id)
+    assert not ok
+    negotiation, neg_reason = A.open_renewal_negotiation(world, balance, player_id)
+    assert negotiation is None
+    assert neg_reason == reason
+
+    assert A.can_renew(world, balance, player_id + 99999) == (False, "Not one of your clients.")

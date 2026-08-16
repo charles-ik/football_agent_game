@@ -5,3 +5,8 @@ saves/
 *.csv
 .DS_Store
 .venv/
+web/node_modules/
+web/.next/
+.env.local
+web/.env.local
+

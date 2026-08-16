@@ -1,0 +1,5 @@
+# The web API layer. Kept separate from requirements.txt on purpose: the engine
+# itself is pure standard library and must not grow a web framework.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+httpx>=0.28

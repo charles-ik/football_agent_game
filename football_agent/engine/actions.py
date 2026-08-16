@@ -77,17 +77,28 @@ def scout_cap(world: World, balance: Balance) -> int:
     return hq_level(balance, world.agency.hq_level).scout_cap
 
 
-def upgrade_hq(world: World, balance: Balance | None = None) -> ActionResult:
+def can_upgrade_hq(world: World, balance: Balance | None = None) -> Tuple[bool, str]:
+    """Whether the HQ upgrade is available, and why not. Read-only."""
     balance = balance or load_balance()
     current = hq_level(balance, world.agency.hq_level)
     levels = hq_levels(balance)
     if world.agency.hq_level >= max(l.level for l in levels):
-        return _fail("Your headquarters is already as good as it gets.")
+        return (False, "Your headquarters is already as good as it gets.")
     if current.upgrade_cost > world.agency.cash:
-        return _fail(
+        return (
+            False,
             f"Upgrade costs {format_money(current.upgrade_cost)}; "
-            f"you have {format_money(world.agency.cash)}."
+            f"you have {format_money(world.agency.cash)}.",
         )
+    return (True, "")
+
+
+def upgrade_hq(world: World, balance: Balance | None = None) -> ActionResult:
+    balance = balance or load_balance()
+    ok, reason = can_upgrade_hq(world, balance)
+    if not ok:
+        return _fail(reason)
+    current = hq_level(balance, world.agency.hq_level)
 
     world.agency.cash -= current.upgrade_cost
     world.agency.hq_level += 1
@@ -390,22 +401,32 @@ def complete_signing(
     )
 
 
-def open_renewal_negotiation(
-    world: World, balance: Balance, player_id: int, r: Optional[random.Random] = None
-) -> Tuple[Optional[Negotiation], str]:
-    """Re-sign an existing client. Trust is the gate."""
+def can_renew(world: World, balance: Balance, player_id: int) -> Tuple[bool, str]:
+    """Whether an agent-contract renewal can be opened, and why not. Read-only."""
     record = world.clients.get(player_id)
     if record is None:
-        return (None, "Not one of your clients.")
+        return (False, "Not one of your clients.")
     player = world.players[player_id]
     remaining = record.agent_contract.expires_week - world.week
     if remaining > 26:
-        return (None, f"Too early — {remaining} weeks still to run.")
+        return (False, f"Too early — {remaining} weeks still to run.")
 
     from .systems.contracts import MIN_TRUST_TO_RENEW
 
     if record.trust < MIN_TRUST_TO_RENEW:
-        return (None, f"{player.name} won't even take the meeting (trust {record.trust:.0f}).")
+        return (False, f"{player.name} won't even take the meeting (trust {record.trust:.0f}).")
+    return (True, "")
+
+
+def open_renewal_negotiation(
+    world: World, balance: Balance, player_id: int, r: Optional[random.Random] = None
+) -> Tuple[Optional[Negotiation], str]:
+    """Re-sign an existing client. Trust is the gate."""
+    ok, reason = can_renew(world, balance, player_id)
+    if not ok:
+        return (None, reason)
+    player = world.players[player_id]
+    record = world.clients[player_id]
 
     generator = r or stream(world.seed, world.week, "negotiation", f"renew-{player_id}")
     bias = negotiation_bias(world.seed, player_id, balance)
@@ -553,6 +574,8 @@ __all__ = [
     "can_approach",
     "can_deal",
     "can_negotiate_interest",
+    "can_renew",
+    "can_upgrade_hq",
     "client_cap",
     "close_negotiation",
     "commission_guide",
