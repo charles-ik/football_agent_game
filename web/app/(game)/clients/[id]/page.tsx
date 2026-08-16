@@ -7,16 +7,9 @@ import { notFound } from "next/navigation";
 import { Money, Pct } from "@/components/money";
 import { RangeBar } from "@/components/range-bar";
 import { TrustMeter } from "@/components/trust-meter";
-import { getClientDetail, isApiError } from "@/lib/api";
+import { getClientDetail, getMeta, isApiError } from "@/lib/api";
 
 import { ClientActions, InterestCards } from "./client-panels";
-
-const TRAIT_BLURBS: Record<string, string> = {
-  ambitious: "Cares about club strength and playing time.",
-  mercenary: "Cares about wages.",
-  loyal: "Dislikes moving, slow to lose trust.",
-  professional: "Cares about playing time, steady.",
-};
 
 export default async function ClientDetailPage({
   params,
@@ -37,6 +30,8 @@ export default async function ClientDetailPage({
     if (isApiError(error) && error.status === 404) notFound();
     throw error;
   }
+  const meta = await getMeta();
+  const traitBlurbs = meta.trait_blurbs;
 
   const autoNegotiate = negotiate ? Number.parseInt(negotiate, 10) : null;
   const { player, report } = detail;
@@ -52,7 +47,7 @@ export default async function ClientDetailPage({
           </span>
           <span
             className="rounded border border-line px-1.5 py-0.5 text-xs text-dim"
-            title={TRAIT_BLURBS[player.trait] ?? ""}
+            title={traitBlurbs[player.trait] ?? ""}
           >
             {player.trait}
           </span>

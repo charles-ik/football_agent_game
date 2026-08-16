@@ -23,6 +23,7 @@ from ..session import (
     get_active_session,
     get_session,
     save_path_for,
+    saves_dir,
     set_session_cookie,
     store,
 )
@@ -67,6 +68,32 @@ def load_game(body: LoadGameRequest, response: Response) -> Dict[str, Any]:
     session = store.create(world, default_balance(), save_path)
     set_session_cookie(response, session.id)
     return {"state": dto.game_state_dto(session)}
+
+
+@router.get("/saves")
+def list_saves() -> Dict[str, Any]:
+    """A plain directory listing — file metadata, not a rule. Lets the client
+    pick a slot instead of typing a name blind."""
+    directory = saves_dir()
+    slots: list[Dict[str, Any]] = []
+    if directory.exists():
+        for path in sorted(directory.glob("*.json")):
+            entry: Dict[str, Any] = {
+                "slot": path.stem,
+                "modified_at": path.stat().st_mtime,
+                "compatible": True,
+                "agency_name": None,
+                "week": None,
+            }
+            try:
+                world = persistence.load(path)
+                entry["agency_name"] = world.agency.name
+                entry["week"] = world.week
+            except Exception:
+                entry["compatible"] = False
+            slots.append(entry)
+        slots.sort(key=lambda e: e["modified_at"], reverse=True)
+    return {"slots": slots}
 
 
 @router.get("")

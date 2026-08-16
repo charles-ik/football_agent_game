@@ -1,16 +1,20 @@
 // Scouting — regions, the scouts covering them, the hiring market, and the
 // reports table. Ability is always a range bar, never a number.
 
-import { getCandidates, getScouting } from "@/lib/api";
+import { getCandidates, getMeta, getScouting } from "@/lib/api";
 
 import { ReportsTable, ScoutManager } from "./scouting-panels";
 
 export default async function ScoutingPage() {
-  const [scouting, candidates] = await Promise.all([getScouting(), getCandidates()]);
+  const [scouting, candidates, meta] = await Promise.all([
+    getScouting(),
+    getCandidates(),
+    getMeta(),
+  ]);
 
   return (
     <div className="space-y-6">
-      <ScoutManager scouting={scouting} candidates={candidates} />
+      <ScoutManager scouting={scouting} candidates={candidates} positions={meta.positions} />
       <section>
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-dim">
           Reports

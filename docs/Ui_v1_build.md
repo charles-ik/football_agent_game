@@ -4,9 +4,41 @@ What was built, the decisions taken, and where to take it next. Written for the
 agent who picks this up cold. Read [ui_build_plan/](ui_build_plan/README.md)
 first for the *why*; this document is the *what actually exists*.
 
-Status: **complete and verified**. 78 tests collected (76 passed, 2 skipped —
-the two skips are pre-existing engine skips), `next build` clean, both halves
-run together with `make dev`.
+Status: **complete and verified**. 80 API/engine tests collected (78 passed, 2
+skipped — the two skips are pre-existing engine skips), 19 Vitest component
+tests, 1 Playwright e2e, `next build` clean, both halves run together with
+`make dev`. A follow-up pass ("Potential improvements to the UI" below) added
+items 1–13; see that section for what changed and why.
+
+---
+
+## How to run and verify
+
+```bash
+python3 -m pip install -r requirements-api.txt
+cd web && npm install && cd ..
+make dev        # or: make api  +  make web
+```
+
+* API on http://127.0.0.1:8000 (`/api/health`), UI on http://localhost:3000.
+* `make test` / `python3 -m pytest tests/ -q` — 78 passed, 2 skipped.
+* `cd web && npm run build` — must compile clean; every route is dynamic (`ƒ`).
+* API tests: `tests/test_api_contract.py` (23), `tests/test_api_leaks.py` (3),
+  `tests/test_api_parity.py` (1 — same seed, same decisions via HTTP and via
+  `engine.actions`, byte-identical `persistence.to_dict`).
+* `cd web && npm test` — Vitest, 19 tests (`range-bar`, `trust-meter`,
+  `eventHref`/`navRouteForEvent`). Pinned to vitest@1/vite@5/jsdom@24: this
+  environment's Node (20.1) is below the 20.19 that vitest@4/vite@8's
+  `rolldown` dependency requires (`node:util`'s `styleText` export). Upgrade
+  the pins once the environment's Node is 20.19+ or 22.12+.
+* `cd web && npm run test:e2e` — Playwright, one spec
+  (`e2e/game-flow.spec.cjs`): new game → assign scout → 10 continues → sign a
+  client. `.cjs`, not `.ts`, for both the config and the spec — this
+  environment's Playwright (bundled with a TS-transform pipeline) hit the same
+  Node-version wall as Vitest when loading `.ts` config/spec files
+  (`SyntaxError: Cannot use import statement outside a module`); plain
+  CommonJS sidesteps it. Starts both servers itself against an isolated
+  `FA_SAVES_DIR`, so it never touches a real save.
 
 ---
 
@@ -61,9 +93,10 @@ Endpoints, all implemented per `ui_build_plan/02-api-contract.md`:
 | Route | Notes |
 | --- | --- |
 | `GET /api/health` | `{"ok": true}` |
-| `GET /api/meta` | Curated allowlist only: commission floor/ceiling, calendar, HQ levels, positions, traits. Never the negotiation block. |
+| `GET /api/meta` | Curated allowlist only: commission floor/ceiling, calendar, HQ levels, positions, traits, trait blurbs. Never the negotiation block. |
 | `POST /api/game/new` | `{seed?, name?, slot?}` → creates session, sets cookie, autosaves. Echoes `seed` **once**, never again. |
 | `POST /api/game/load` | `{slot}` → 404 `save_not_found` / 409 `save_incompatible`. |
+| `GET /api/game/saves` | No session needed. `{slots: [{slot, modified_at, compatible, agency_name, week}]}` — a directory listing, not a rule; feeds the new-game load picker. |
 | `GET /api/game` | `GameState` — header bar data. Works after game over. |
 | `POST /api/game/continue` | `tick()`, evicts all negotiations, trims inbox (keep ACTION ≤4w old, cap 120), autosaves. Returns `{state, events, notable}`. |
 | `POST /api/game/save` | Writes the slot **without** re-targeting the session's autosave slot. |
@@ -103,8 +136,10 @@ web/
     layout.tsx              root shell (html/body + <Toaster>)
     globals.css             Tailwind v4 @theme: ink/panel/line/fg/dim + severity palette
     (game)/                 route group behind the session boundary
-      layout.tsx            fetches GameState; redirects: no session -> /new-game,
-                            game_over -> /game-over. Header bar + nav + Continue.
+      layout.tsx            fetches GameState + inbox (for nav badges); redirects: no
+                             session -> /new-game, game_over -> /game-over. Header bar +
+                             nav + Continue + RefreshOnFocus.
+      error.tsx              in-voice error boundary ("The line to the office dropped.")
       page.tsx              Inbox (needs-decision panel + week-grouped feed)
       clients/page.tsx + clients-table.tsx
       clients/[id]/page.tsx + client-panels.tsx + not-found.tsx
@@ -113,18 +148,22 @@ web/
       finances/page.tsx     runway warning + history table + hand-rolled SVG sparkline
       leagues/page.tsx
       loading.tsx           generic skeleton
-    new-game/page.tsx + new-game-form.tsx   (outside the shell; seed echo on confirmation)
+    new-game/page.tsx + new-game-form.tsx   (outside the shell; save-slot picker)
+    new-game/created/page.tsx               (seed confirmation — its own route; see
+                                             "A bug the e2e test found and fixed" below)
     game-over/page.tsx                      (outside the shell; full-screen epilogue)
   components/
     header-bar.tsx  continue-button.tsx  event-list.tsx  keyboard-shortcuts.tsx
     range-bar.tsx   money.tsx            trust-meter.tsx toaster.tsx
-    dialog.tsx      action-button.tsx
+    dialog.tsx      action-button.tsx    refresh-on-focus.tsx
     negotiation/    negotiation-dialog.tsx  commission-haggle.tsx  package-haggle.tsx  shared.tsx
   lib/
     api.ts        server-only fetch wrapper + typed, zod-parsed read helpers
     actions.ts    "use server" mutations; guard() maps session_not_found/game_over to redirects
     types.ts      DTO types mirroring 02-api-contract.md
     schemas.ts    zod schemas for every response shape
+  vitest.config.ts + vitest.setup.ts   component tests (range-bar/trust-meter/event-list)
+  playwright.config.cjs + e2e/game-flow.spec.cjs   one end-to-end spec (.cjs — see below)
 ```
 
 Data flow, exactly as planned: pages are async Server Components; mutations are
@@ -207,38 +246,13 @@ sibling:
 7. Everything else follows the plan: zod at the boundary, no charting library
    (sparkline is hand-rolled SVG), no client cache, single worker.
 
-## How to run and verify
-
-```bash
-python3 -m pip install -r requirements-api.txt
-cd web && npm install && cd ..
-make dev        # or: make api  +  make web
-```
-
-* API on http://127.0.0.1:8000 (`/api/health`), UI on http://localhost:3000.
-* `make test` / `python3 -m pytest tests/ -q` — 76 passed, 2 skipped.
-* `cd web && npm run build` — must compile clean; every route is dynamic (`ƒ`).
-* API tests: `tests/test_api_contract.py` (21), `tests/test_api_leaks.py` (3),
-  `tests/test_api_parity.py` (1 — same seed, same decisions via HTTP and via
-  `engine.actions`, byte-identical `persistence.to_dict`).
-
 ## Known limitations (as built, by design or by budget)
 
 * **Sessions are in-memory.** Restarting the API drops every session; saves on
   disk are the recovery path (the player re-loads a slot from /new-game).
-* **No save-slot listing.** `POST /api/game/load` takes a blind slot name; the
-  UI can't show what exists.
-* **Confirm steps use `window.confirm`** (release client, HQ upgrade, promise a
-  move) — native chrome, not the game's voice.
-* **The header's pending count is only as fresh as the last navigation or
-  mutation** — nothing polls.
-* **Dialog accessibility is minimal**: Esc/backdrop close and `role="dialog"`,
-  but no focus trap and no focus restoration; toasts are not `aria-live`.
+* **Confirm steps are now styled dialogs** (release client, HQ upgrade, promise
+  a move, dismiss scout) — fixed in the UI improvements pass below.
 * **Tables are desktop-dense**; small screens get horizontal scroll, nothing more.
-* **No client-side tests** — the web tier is verified by types, build and the
-  API tests, not by component or e2e tests.
-* **The negotiation history echoes only their hints**, not the numbers you
-  offered (the DTO carries hints; your proposals are not re-rendered).
 
 ---
 
@@ -248,57 +262,81 @@ Ordered by value per effort. Each entry names the seam it lands in. Anything
 marked **[engine]** is gated on engine work first — the UI must not grow the
 rule itself (see the binding rules at the end).
 
-### Cheap, high value
+### Cheap, high value — done
 
-1. **Styled confirm dialogs.** Replace `window.confirm` in
-   `components/action-button.tsx` (`confirm` prop) with a small `Dialog`-based
-   confirm. Same call sites, the game's voice instead of native chrome.
-2. **Save-slot picker.** Add `GET /api/game/saves` (list `saves/*.json` — file
-   listing, not a rule) and turn the load form in `app/new-game/new-game-form.tsx`
-   into a select. Kills the blind text field and the `save_not_found` toast loop.
-3. **Meta-driven options.** `AssignDialog` in
-   `app/(game)/scouting/scouting-panels.tsx` hardcodes positions; `TRAIT_BLURBS`
-   in `app/(game)/clients/[id]/page.tsx` hardcodes trait copy. Extend
-   `GET /api/meta` (positions already ship; add trait blurbs as display copy)
-   and fetch it once in the shell.
-4. **Toast the deep-link miss.** `/clients/{id}?negotiate={interest_id}`
-   silently does nothing when the approach can't be negotiated
-   (`client-panels.tsx` `useEffect`). Surface `can_negotiate.reason` as a toast.
-5. **Per-route error boundaries.** Add `error.tsx` to `(game)/` rendering an
-   in-voice failure ("The line to the office dropped. Refresh.") with a retry
-   button, instead of Next's default.
-6. **Range-bar animation.** A CSS `transition` on `left`/`width` in
-   `components/range-bar.tsx` makes a narrowing report *feel* earned week over
-   week — the core scouting loop, made visible.
-7. **Rounds as pips.** The haggles print "Round 1 of 3" as text
-   (`negotiation/shared.tsx`); three dots that fill in read faster mid-haggle.
+1. **Styled confirm dialogs.** ✅ `components/action-button.tsx`'s `confirm` prop
+   now opens a small `Dialog`-based confirm (Cancel/Confirm) instead of
+   `window.confirm`. Same call sites (release client, dismiss scout, seek &
+   promise, HQ upgrade).
+2. **Save-slot picker.** ✅ `GET /api/game/saves` (`api/routers/game.py`) lists
+   `saves/*.json` — slot name, mtime, agency name, week, and a `compatible`
+   flag from a best-effort `persistence.load`. `app/new-game/new-game-form.tsx`
+   turns the load field into a `<select>` fed by it, with a manual-entry
+   fallback when the list is empty or the player wants to type a name.
+3. **Meta-driven options.** ✅ `GET /api/meta` gained `trait_blurbs` (display
+   copy, still an allowlist — no rule crossed the wire). `AssignDialog` in
+   `scouting-panels.tsx` takes `positions` from `/api/meta` instead of a
+   hardcoded array; `clients/[id]/page.tsx` reads `TRAIT_BLURBS` from there too.
+4. **Toast the deep-link miss.** ✅ `client-panels.tsx`'s `InterestCards` effect
+   toasts `can_negotiate.reason` (amber) when a `?negotiate=` deep link points
+   at an approach that can no longer be negotiated, instead of doing nothing.
+5. **Per-route error boundaries.** ✅ `app/(game)/error.tsx` — "The line to the
+   office dropped." with a Refresh button, in the game's voice.
+6. **Range-bar animation.** ✅ `transition-[left,width]` (with
+   `motion-reduce:transition-none`) on the fill bar in `components/range-bar.tsx`.
+7. **Rounds as pips.** ✅ `RoundPips` in `negotiation/shared.tsx` — filled dots
+   (accent = spent, outline = remaining) plus an `sr-only` "Round X of Y" for
+   screen readers; used in both haggle components.
 
-### Medium
+### Medium — done
 
-8. **Focus management and aria-live.** Trap focus in `components/dialog.tsx`,
-   restore focus to the opener on close, and put `aria-live="polite"` on the
-   toaster. The palette already pairs colour with text/icons; this completes
-   the accessibility floor for the modal flow.
-9. **Echo your own offers.** `negotiation_dto` (`api/negotiations.py`) carries
-   their hints but not your past proposals. Render each proposal server-side
-   (pct or Money — never `x`) into the history so the dialog reads like a
-   conversation. Leak-test stays green: rendered values only.
-10. **Nav badges.** The inbox count sits in the header; per-item badges
-    (Clients: open approaches; Scouting: unactioned discoveries) in
-    `components/header-bar.tsx` would route attention without opening the inbox.
-    Counts come from `GameState`/existing DTO fields — no new rules.
-11. **Poll-on-focus freshness.** Revalidate the header when the tab regains
-    focus (a tiny client component calling `router.refresh()` on
-    `visibilitychange`) so the pending count can't go stale over a lunch break.
-12. **Week-summary upgrade.** The dismiss-on-click panel in
-    `components/continue-button.tsx` could group by severity (critical first)
-    and deep-link its rows via the existing `eventHref()`.
-13. **Client-side tests.** Vitest for `range-bar`/`trust-meter`/`eventHref`
-    (pure rendering logic), then one Playwright e2e: new game -> assign scout ->
-    10 continues -> sign someone. The API parity test already proves the rules;
-    this would prove the wiring.
+8. **Focus management and aria-live.** ✅ `components/dialog.tsx` traps Tab
+   inside the panel, focuses the first focusable element on open, and restores
+   focus to the opener on close. `components/toaster.tsx`'s toast region is
+   `role="region" aria-live="polite"`.
+9. **Echo your own offers.** ✅ `NegotiationHandle.offers` (`api/negotiations.py`)
+   is a `{history_index: rendered_offer}` map — keyed by position, not round
+   number, because `accept-counter`/`abandon` reuse the current round's number
+   and would otherwise misattribute an offer to the wrong entry. `propose()`
+   (`api/routers/negotiations.py`) records the rendered pct or wage/fee
+   *before* calling `neg.propose(x)`. `negotiation_dto` attaches it to each
+   history entry as `offer` (never `x`); `ProposalEcho` in `negotiation/shared.tsx`
+   renders "You proposed …" / "You offered …" above each round's hint.
+10. **Nav badges.** ✅ `(game)/layout.tsx` fetches the inbox once alongside game
+    state and buckets `needs_decision` events by `navRouteForEvent()`
+    (`components/event-list.tsx`) into per-section counts, rendered as small
+    badges next to Clients/Scouting in `components/header-bar.tsx`'s nav.
+11. **Poll-on-focus freshness.** ✅ `components/refresh-on-focus.tsx` — a bare
+    client component calling `router.refresh()` on `visibilitychange`, mounted
+    once in `(game)/layout.tsx`.
+12. **Week-summary upgrade.** ✅ `sortBySeverity()` (`components/event-list.tsx`)
+    reorders the notable-events array critical-first before
+    `continue-button.tsx` renders it; rows already deep-link via the existing
+    `EventList`/`eventHref()`. The panel is also now a `div` with its own
+    "Dismiss" button rather than a `<button>` wrapping interactive `<a>` rows.
+13. **Client-side tests.** ✅ Vitest (`web/vitest.config.ts`, pinned to
+    vitest@1/vite@5 — this environment's Node is below the 20.19 that
+    vitest@4/vite@8's rolldown dependency requires) covers `range-bar`,
+    `trust-meter` and `eventHref`/`navRouteForEvent` (19 tests, `npm test`).
+    One Playwright e2e (`web/e2e/game-flow.spec.cjs`, `npm run test:e2e`,
+    `.cjs` for the same Node-version reason) drives the real stack: new game
+    → assign scout → 10 continues → sign a client. It caught a real bug (next
+    item).
 
-### Bigger investments
+### A bug the e2e test found and fixed
+
+`newGame()` (`web/lib/actions.ts`) used to `revalidatePath("/", "layout")` and
+return `{seed}` for `new-game-form.tsx` to show a "the agency is open, note
+your seed" confirmation in place. Setting the session cookie inside a Server
+Action makes Next.js auto-refresh whatever route invoked it — so `/new-game`'s
+own "already playing? go to `/`" guard fired on that automatic refresh and
+redirected away before the confirmation ever rendered (verified with
+Playwright: the URL flips from `/new-game` to `/` within ~50ms of the click,
+skipping the seed screen entirely; a real single-player would never see their
+world's seed). Fixed by having `newGame()` `redirect()` to a dedicated
+`/new-game/created?seed=` route instead, which carries no such guard.
+
+### Bigger investments — not done this pass
 
 14. **Responsive pass.** The dense tables assume a desktop. A real small-screen
     layout (cards instead of rows for clients/reports) is a redesign of

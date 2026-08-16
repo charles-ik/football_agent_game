@@ -21,9 +21,11 @@ import type { ScoutCandidate, ScoutDTO, ScoutingReportRow, ScoutingState } from 
 export function ScoutManager({
   scouting,
   candidates,
+  positions,
 }: {
   scouting: ScoutingState;
   candidates: ScoutCandidate[];
+  positions: string[];
 }) {
   const [assigning, setAssigning] = useState<ScoutDTO | null>(null);
   const [focusing, setFocusing] = useState<ScoutDTO | null>(null);
@@ -131,7 +133,12 @@ export function ScoutManager({
         </div>
       </section>
 
-      <AssignDialog scout={assigning} scouting={scouting} onClose={() => setAssigning(null)} />
+      <AssignDialog
+        scout={assigning}
+        scouting={scouting}
+        positions={positions}
+        onClose={() => setAssigning(null)}
+      />
       <FocusDialog scout={focusing} scouting={scouting} onClose={() => setFocusing(null)} />
       <HireDialog open={hiring} candidates={candidates} onClose={() => setHiring(false)} />
     </>
@@ -141,10 +148,12 @@ export function ScoutManager({
 function AssignDialog({
   scout,
   scouting,
+  positions,
   onClose,
 }: {
   scout: ScoutDTO | null;
   scouting: ScoutingState;
+  positions: string[];
   onClose: () => void;
 }) {
   const { toastResult } = useToast();
@@ -192,7 +201,7 @@ function AssignDialog({
               className="w-full rounded border border-line bg-panel-2 px-2 py-1.5 outline-none focus:border-accent"
             >
               <option value="">Any</option>
-              {["GK", "DF", "MF", "FW"].map((p) => (
+              {positions.map((p) => (
                 <option key={p} value={p}>{p}</option>
               ))}
             </select>

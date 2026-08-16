@@ -44,17 +44,17 @@ async function guard<T>(fn: () => Promise<T>): Promise<T> {
 // Game lifecycle
 // ---------------------------------------------------------------------------
 
-export async function newGame(
-  name: string,
-  seed: number | null,
-  slot: string,
-): Promise<{ seed: number }> {
+export async function newGame(name: string, seed: number | null, slot: string): Promise<never> {
   const body: Record<string, unknown> = { name, slot };
   if (seed !== null) body.seed = seed;
   const data = await api<{ seed: number }>("/api/game/new", { method: "POST", json: body });
   const parsed = newGameSchema.parse(data);
-  refresh();
-  return { seed: parsed.seed };
+  // redirect(), not a returned value: setting the session cookie here makes
+  // Next auto-refresh whatever route invoked this action, and /new-game's own
+  // "already playing? go to /" guard would fire on that refresh and skip the
+  // seed confirmation before the player ever saw it. A dedicated route below
+  // sidesteps that guard entirely.
+  redirect(`/new-game/created?seed=${parsed.seed}`);
 }
 
 export async function loadGame(slot: string): Promise<void> {

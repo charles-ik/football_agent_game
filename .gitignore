@@ -9,4 +9,8 @@ web/node_modules/
 web/.next/
 .env.local
 web/.env.local
+web/test-results/
+web/playwright-report/
+web/blob-report/
+web/coverage/
 

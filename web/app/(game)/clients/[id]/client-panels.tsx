@@ -12,6 +12,7 @@ import {
   NegotiationDialog,
   type NegotiationRequest,
 } from "@/components/negotiation/negotiation-dialog";
+import { useToast } from "@/components/toaster";
 import { releaseClient, seekMove, stopSeeking } from "@/lib/actions";
 import type { ClientDetail } from "@/lib/types";
 
@@ -23,20 +24,26 @@ export function InterestCards({
   autoNegotiate: number | null;
 }) {
   const [request, setRequest] = useState<NegotiationRequest | null>(null);
+  const { toast } = useToast();
 
   // Inbox deep-links land here: /clients/{id}?negotiate={interest_id} opens
-  // the deal dialog straight into that approach.
+  // the deal dialog straight into that approach. If the approach can no
+  // longer be negotiated, say why instead of silently doing nothing.
   useEffect(() => {
     if (autoNegotiate === null) return;
     const interest = detail.interests.find((i) => i.id === autoNegotiate);
-    if (interest && interest.can_negotiate.ok) {
+    if (!interest) return;
+    if (interest.can_negotiate.ok) {
       setRequest({
         kind: "deal",
         interestId: interest.id,
         clubName: interest.club_name,
         isRenewal: interest.is_renewal,
       });
+    } else {
+      toast(interest.can_negotiate.reason, "warn");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoNegotiate, detail.interests]);
 
   return (

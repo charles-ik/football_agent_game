@@ -18,7 +18,7 @@ import {
 } from "@/lib/actions";
 import type { AssessResponse, Money as MoneyValue, NegotiationDTO } from "@/lib/types";
 
-import { NegotiationOutcome, ProposalEcho, WalkAwayButton, isTerminal } from "./shared";
+import { NegotiationOutcome, ProposalEcho, RoundPips, WalkAwayButton, isTerminal } from "./shared";
 
 type PackageGuide = { low_wage: MoneyValue; high_wage: MoneyValue; low_fee: MoneyValue; high_fee: MoneyValue };
 type PackageBounds = { max_wage: MoneyValue; max_fee: MoneyValue; asking_price: MoneyValue };
@@ -178,8 +178,8 @@ export function PackageHaggle({
           )}
 
           <div className="flex items-center justify-between">
-            <span className="num text-xs text-faint">
-              Round {neg.round} of {neg.max_rounds}
+            <span className="text-xs text-faint">
+              <RoundPips round={neg.round} maxRounds={neg.max_rounds} />
             </span>
             <div className="flex items-center gap-3">
               <WalkAwayButton

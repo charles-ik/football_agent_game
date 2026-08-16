@@ -81,6 +81,7 @@ import {
   inboxSchema,
   leaguesSchema,
   metaSchema,
+  savesSchema,
   scoutingStateSchema,
 } from "@/lib/schemas";
 import type {
@@ -92,6 +93,7 @@ import type {
   InboxResponse,
   LeagueDTO,
   MetaState,
+  SaveSlot,
   ScoutCandidate,
   ScoutingState,
 } from "@/lib/types";
@@ -124,3 +126,6 @@ export const getLeagues = () =>
   api<LeagueDTO[]>("/api/leagues").then((d) => leaguesSchema.parse(d));
 
 export const getMeta = () => api<MetaState>("/api/meta").then((d) => metaSchema.parse(d));
+
+export const getSaves = () =>
+  api<{ slots: SaveSlot[] }>("/api/game/saves").then((d) => savesSchema.parse(d).slots);

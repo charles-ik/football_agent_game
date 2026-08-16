@@ -14,6 +14,23 @@ const SEVERITY_ICON: Record<Severity, string> = {
   action: "▸",
 };
 
+// Critical first: the week summary reads worst-news-first, not chronologically.
+const SEVERITY_RANK: Record<Severity, number> = {
+  critical: 0,
+  action: 1,
+  warning: 2,
+  good: 3,
+  info: 4,
+};
+
+/** Stable sort by severity, worst first — used for the week-summary panel. */
+export function sortBySeverity(events: EventDTO[]): EventDTO[] {
+  return events
+    .map((event, index) => ({ event, index }))
+    .sort((a, b) => SEVERITY_RANK[a.event.severity] - SEVERITY_RANK[b.event.severity] || a.index - b.index)
+    .map((entry) => entry.event);
+}
+
 export function eventHref(event: EventDTO): string | null {
   const playerId = event.data.player_id;
   const interestId = event.data.interest_id;
@@ -22,6 +39,17 @@ export function eventHref(event: EventDTO): string | null {
   }
   if (typeof playerId === "number") return `/clients/${playerId}`;
   if (typeof event.data.scout_id === "number") return "/scouting";
+  return null;
+}
+
+/** Which nav section an event's decision belongs to, for the header's
+ * per-item badges — the same routing eventHref already encodes, collapsed to
+ * a top-level section. */
+export function navRouteForEvent(event: EventDTO): string | null {
+  const href = eventHref(event);
+  if (!href) return null;
+  if (href.startsWith("/clients")) return "/clients";
+  if (href.startsWith("/scouting")) return "/scouting";
   return null;
 }
 

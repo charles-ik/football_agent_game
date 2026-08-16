@@ -30,7 +30,7 @@ export function RangeBar({
     <div className="min-w-28" title={confidence ? `${low}–${high} — ${confidence}` : `${low}–${high}`}>
       <div className="relative h-2 w-full rounded bg-panel-2">
         <div
-          className={`absolute h-2 rounded ${tone}`}
+          className={`absolute h-2 rounded transition-[left,width] duration-700 ease-out motion-reduce:transition-none ${tone}`}
           style={{ left: `${left}%`, width: `${width}%` }}
         />
       </div>

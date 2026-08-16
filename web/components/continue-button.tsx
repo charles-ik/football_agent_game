@@ -7,7 +7,7 @@
 
 import { useState, useTransition } from "react";
 
-import { EventList } from "@/components/event-list";
+import { EventList, sortBySeverity } from "@/components/event-list";
 import { useToast } from "@/components/toaster";
 import { continueWeek } from "@/lib/actions";
 import type { EventDTO } from "@/lib/types";
@@ -31,19 +31,24 @@ export function ContinueButton({ pending }: { pending: number }) {
   return (
     <>
       {summary && summary.length > 0 && (
-        <button
-          onClick={() => setSummary(null)}
-          className="fixed bottom-20 right-4 z-30 w-96 rounded border border-line bg-panel p-3 text-left shadow-2xl shadow-black/60"
-          aria-label="Dismiss week summary"
+        <div
+          role="region"
+          aria-label="Week summary"
+          className="fixed bottom-20 right-4 z-30 w-96 rounded border border-line bg-panel p-3 shadow-2xl shadow-black/60"
         >
           <div className="mb-1 flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wider text-faint">
               The week that was
             </span>
-            <span className="text-xs text-faint">click to dismiss</span>
+            <button
+              onClick={() => setSummary(null)}
+              className="rounded px-1.5 py-0.5 text-xs text-faint hover:bg-panel-2 hover:text-fg"
+            >
+              Dismiss
+            </button>
           </div>
-          <EventList events={summary} />
-        </button>
+          <EventList events={sortBySeverity(summary)} />
+        </div>
       )}
       <button
         id="continue-button"

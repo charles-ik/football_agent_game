@@ -20,6 +20,15 @@ from .. import dto
 
 router = APIRouter(tags=["meta"])
 
+# Display copy, lifted from Trait's docstring/comments (models.py) so the UI
+# doesn't hardcode it. Not a rule — just words explaining an existing one.
+TRAIT_BLURBS: Dict[str, str] = {
+    Trait.AMBITIOUS.value: "Cares about club strength and playing time.",
+    Trait.MERCENARY.value: "Cares about wages.",
+    Trait.LOYAL.value: "Dislikes moving, slow to lose trust.",
+    Trait.PROFESSIONAL.value: "Cares about playing time, steady.",
+}
+
 
 @router.get("/meta")
 def meta() -> Dict[str, Any]:
@@ -37,4 +46,5 @@ def meta() -> Dict[str, Any]:
         "hq_levels": [dto.hq_level_dto(level) for level in hq_levels(balance)],
         "positions": [p.value for p in Position],
         "traits": [t.value for t in Trait],
+        "trait_blurbs": TRAIT_BLURBS,
     }

@@ -202,11 +202,16 @@ def propose(
             neg.status = Status.ABANDONED
             return _terminal_dto(session, handle)
         x = actions.propose_package(session.balance, interest, body.wage, body.fee or 0.0)
+        offer = {"wage": dto.money(body.wage), "fee": dto.money(body.fee or 0.0)}
     else:
         if body.pct is None:
             raise HTTPException(400, "bad_request")
         x = x_from_pct(session.balance, body.pct)
+        offer = {"pct": round(body.pct, 4)}
 
+    # Recorded *before* propose() appends its Response, so the index lines up
+    # with the history entry this call is about to create.
+    handle.offers[len(neg.history)] = offer
     neg.propose(x)  # on_first_propose fires here — the attempt is now spent
     return _terminal_dto(session, handle)
 

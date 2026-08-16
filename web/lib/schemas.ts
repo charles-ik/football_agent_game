@@ -269,7 +269,18 @@ export const metaSchema = z.object({
   hq_levels: z.array(hqLevelSchema),
   positions: z.array(z.string()),
   traits: z.array(z.string()),
+  trait_blurbs: z.record(z.string(), z.string()),
 });
+
+export const saveSlotSchema = z.object({
+  slot: z.string(),
+  modified_at: z.number(),
+  compatible: z.boolean(),
+  agency_name: z.string().nullable(),
+  week: z.number().nullable(),
+});
+
+export const savesSchema = z.object({ slots: z.array(saveSlotSchema) });
 
 export const negotiationSchema = z.object({
   id: z.string(),
@@ -294,7 +305,16 @@ export const negotiationSchema = z.object({
     z.object({ max_wage: moneySchema, max_fee: moneySchema, asking_price: moneySchema }),
   ]),
   context: z.record(z.string(), z.unknown()),
-  history: z.array(z.object({ round: z.number(), hint: z.string(), status: z.string() })),
+  history: z.array(
+    z.object({
+      round: z.number(),
+      hint: z.string(),
+      status: z.string(),
+      offer: z
+        .union([z.object({ pct: z.number() }), z.object({ wage: moneySchema, fee: moneySchema })])
+        .nullable(),
+    }),
+  ),
   last_response: z.object({ hint: z.string(), round: z.number() }).nullable(),
   counter: z
     .union([z.object({ pct: z.number() }), z.object({ wage: moneySchema, fee: moneySchema })])

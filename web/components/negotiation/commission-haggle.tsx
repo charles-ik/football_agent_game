@@ -13,7 +13,7 @@ import { useToast } from "@/components/toaster";
 import { abandonNegotiation, acceptCounter, proposePct } from "@/lib/actions";
 import type { NegotiationDTO, PlayerDTO, ScoutingReportDTO } from "@/lib/types";
 
-import { NegotiationOutcome, ProposalEcho, WalkAwayButton, isTerminal } from "./shared";
+import { NegotiationOutcome, ProposalEcho, RoundPips, WalkAwayButton, isTerminal } from "./shared";
 
 type PctGuide = { low_pct: number; high_pct: number };
 type PctBounds = { min_pct: number; max_pct: number };
@@ -165,9 +165,7 @@ export function CommissionHaggle({
           )}
 
           <div className="flex items-center justify-between text-xs text-faint">
-            <span className="num">
-              Round {neg.round} of {neg.max_rounds}
-            </span>
+            <RoundPips round={neg.round} maxRounds={neg.max_rounds} />
             <WalkAwayButton
               disabled={pending}
               onClick={() => run(() => abandonNegotiation(neg.id))}

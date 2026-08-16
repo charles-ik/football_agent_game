@@ -15,7 +15,13 @@ const NAV = [
   { href: "/leagues", label: "Leagues", key: "6" },
 ];
 
-export function HeaderBar({ state }: { state: GameState }) {
+export function HeaderBar({
+  state,
+  navCounts,
+}: {
+  state: GameState;
+  navCounts: Record<string, number>;
+}) {
   const { agency, calendar, counts, weekly_net, pending_actions } = state;
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-panel/95 backdrop-blur">
@@ -67,16 +73,24 @@ export function HeaderBar({ state }: { state: GameState }) {
         </div>
       </div>
       <nav className="mx-auto flex max-w-6xl gap-1 px-4 pb-1.5" aria-label="Main">
-        {NAV.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="rounded px-2 py-1 text-xs text-dim hover:bg-panel-2 hover:text-fg"
-          >
-            <span className="mr-1 text-faint">{item.key}</span>
-            {item.label}
-          </Link>
-        ))}
+        {NAV.map((item) => {
+          const count = navCounts[item.href] ?? 0;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-1 rounded px-2 py-1 text-xs text-dim hover:bg-panel-2 hover:text-fg"
+            >
+              <span className="mr-1 text-faint">{item.key}</span>
+              {item.label}
+              {count > 0 && (
+                <span className="rounded-full bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
+                  {count}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
     </header>
   );

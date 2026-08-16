@@ -19,11 +19,19 @@ def test_health(api_client):
 
 def test_meta_is_the_allowlist(api_client):
     meta = api_client.get("/api/meta").json()
-    assert set(meta) == {"commission", "calendar", "hq_levels", "positions", "traits"}
+    assert set(meta) == {
+        "commission",
+        "calendar",
+        "hq_levels",
+        "positions",
+        "traits",
+        "trait_blurbs",
+    }
     assert meta["commission"] == {"min_pct": 0.03, "max_pct": 0.20}
     assert meta["calendar"]["windows"] == [[1, 10], [28, 31]]
     assert meta["hq_levels"][0]["weekly_cost"] == {"amount": 180.0, "text": "£180"}
     assert meta["positions"] == ["GK", "DF", "MF", "FW"]
+    assert set(meta["trait_blurbs"]) == set(meta["traits"])
 
 
 def test_everything_but_meta_and_new_requires_a_session(api_client):
@@ -75,6 +83,19 @@ def test_load_missing_save_is_a_404(api_client):
     response = api_client.post("/api/game/load", json={"slot": "nope"})
     assert response.status_code == 404
     assert response.json()["error"] == "save_not_found"
+
+
+def test_saves_lists_slots_without_a_session(api_game):
+    api_game.post("/api/game/save", json={"slot": "slot-b"})
+    # No session required — the new-game screen calls this before one exists.
+    response = api_game.get("/api/game/saves")
+    assert response.status_code == 200
+    slugs = {s["slot"] for s in response.json()["slots"]}
+    assert {"autosave", "slot-b"} <= slugs
+    slot_b = next(s for s in response.json()["slots"] if s["slot"] == "slot-b")
+    assert slot_b["compatible"] is True
+    assert slot_b["agency_name"] == "Test Agency"
+    assert isinstance(slot_b["week"], int)
 
 
 def test_slot_names_are_slugs(api_game):
@@ -199,6 +220,25 @@ def test_signing_negotiation_completes_server_side(api_game):
     assert any(
         c["player"]["id"] == player_id for c in api_game.get("/api/clients").json()
     )
+
+
+def test_history_echoes_your_own_offer(api_game):
+    """The dialog should read like a conversation: your proposal alongside
+    their hint, not just their side of it."""
+    player_id = _approachable(api_game)["player"]["id"]
+    opened = api_game.post("/api/negotiations/signing", json={"player_id": player_id}).json()
+    guide_top = opened["guide"]["high_pct"]
+    body = api_game.post(
+        f"/api/negotiations/{opened['id']}/propose", json={"pct": guide_top + 0.005}
+    ).json()
+    assert body["history"][-1]["offer"] == {"pct": round(guide_top + 0.005, 4)}
+    if body["status"] == "open":
+        # A second push records a second, independent offer entry.
+        body2 = api_game.post(
+            f"/api/negotiations/{opened['id']}/propose", json={"pct": guide_top}
+        ).json()
+        assert body2["history"][0]["offer"] == {"pct": round(guide_top + 0.005, 4)}
+        assert body2["history"][-1]["offer"] == {"pct": round(guide_top, 4)}
 
 
 def test_reopening_an_open_negotiation_resumes_it(api_game):

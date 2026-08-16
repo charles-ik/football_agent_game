@@ -258,6 +258,15 @@ export type MetaState = {
   hq_levels: HQLevelDTO[];
   positions: string[];
   traits: string[];
+  trait_blurbs: Record<string, string>;
+};
+
+export type SaveSlot = {
+  slot: string;
+  modified_at: number;
+  compatible: boolean;
+  agency_name: string | null;
+  week: number | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -282,7 +291,12 @@ export type NegotiationDTO = {
     | { min_pct: number; max_pct: number }
     | { max_wage: Money; max_fee: Money; asking_price: Money };
   context: Record<string, unknown>;
-  history: { round: number; hint: string; status: string }[];
+  history: {
+    round: number;
+    hint: string;
+    status: string;
+    offer: { pct: number } | { wage: Money; fee: Money } | null;
+  }[];
   last_response: { hint: string; round: number } | null;
   counter: { pct: number } | { wage: Money; fee: Money } | null;
   result?: ActionResultDTO;

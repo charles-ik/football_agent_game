@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import secrets
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
 from fastapi import HTTPException
@@ -48,6 +48,12 @@ class NegotiationHandle:
     subject_id: int  # player_id, or interest_id for deals
     years: int = 4  # deals only
     created_at: float = 0.0
+    # Your own proposals, keyed by their position in the negotiation's history
+    # list — rendered values only (pct, or wage/fee), never x. The engine's
+    # Response doesn't carry your offer (only their counter), so the API
+    # remembers it here purely to echo it back; nothing about the
+    # negotiation's rules changes.
+    offers: Dict[int, Dict[str, Any]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.created_at:
@@ -144,7 +150,16 @@ def negotiation_dto(session: Session, handle: NegotiationHandle) -> Dict[str, An
         "max_rounds": neg.max_rounds,
         "rounds_left": neg.rounds_left,
         "history": [
-            {"round": r.round, "hint": r.hint, "status": r.status.value} for r in neg.history
+            {
+                "round": r.round,
+                "hint": r.hint,
+                "status": r.status.value,
+                # Keyed by history position, not round number: accept-counter
+                # and abandon reuse the current round's number, so keying by
+                # round would misattribute your offer to the wrong entry.
+                "offer": handle.offers.get(index),
+            }
+            for index, r in enumerate(neg.history)
         ],
         "last_response": (
             {"hint": neg.history[-1].hint, "round": neg.history[-1].round}
