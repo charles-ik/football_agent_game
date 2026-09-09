@@ -65,7 +65,7 @@ export function Dialog({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -77,21 +77,21 @@ export function Dialog({
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className={`max-h-[85vh] overflow-y-auto rounded border border-line bg-panel shadow-2xl shadow-black/60 outline-none ${
+        className={`anim-rise max-h-[85vh] overflow-y-auto rounded-xl border border-line bg-panel shadow-2xl shadow-black/70 outline-none ${
           wide ? "w-full max-w-2xl" : "w-full max-w-md"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-          <h2 className="text-sm font-semibold tracking-wide">{title}</h2>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel/95 px-4 py-3 backdrop-blur">
+          <h2 className="t-section">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded px-2 py-0.5 text-dim hover:bg-panel-2 hover:text-fg"
+            className="rounded-md px-2 py-1 text-dim transition-colors hover:bg-panel-2 hover:text-fg"
           >
             ✕
           </button>
         </div>
-        <div className="px-4 py-3">{children}</div>
+        <div className="px-4 py-4">{children}</div>
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export default async function GameOverPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-lg rounded border-2 border-bad/60 bg-panel p-8 text-center">
+      <div className="anim-rise w-full max-w-lg rounded-xl border border-bad/50 bg-panel p-8 text-center shadow-2xl shadow-bad/10">
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-bad">
           Game over
         </p>
@@ -42,7 +42,7 @@ export default async function GameOverPage() {
         </dl>
         <Link
           href="/new-game"
-          className="inline-block rounded bg-accent px-6 py-2 font-semibold text-ink hover:bg-accent/90"
+          className="inline-block rounded-lg bg-accent px-6 py-2.5 font-semibold text-ink transition-colors hover:bg-accent/90"
         >
           Start again
         </Link>

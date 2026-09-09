@@ -5,6 +5,7 @@
 
 import { EventList } from "@/components/event-list";
 import { Money, Pct } from "@/components/money";
+import { buttonClass, cn } from "@/components/ui";
 import type { NegotiationDTO } from "@/lib/types";
 
 export function isTerminal(status: NegotiationDTO["status"]): boolean {
@@ -47,20 +48,16 @@ export function ProposalEcho({ neg }: { neg: NegotiationDTO }) {
           ? "text-warn"
           : "text-dim";
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2 rounded-lg border border-line bg-panel-2/60 px-3 py-2.5">
       {neg.history.slice(-3, -1).map((entry, index) => (
-        <div key={index}>
+        <div key={index} className="border-l-2 border-line pl-2.5 opacity-70">
           <OfferLine offer={entry.offer} />
-          <p className="text-xs text-faint">
-            Round {entry.round}: {entry.hint}
-          </p>
+          <p className="text-xs text-faint">{entry.hint}</p>
         </div>
       ))}
-      <div>
+      <div className="anim-slide-in border-l-2 border-accent/50 pl-2.5">
         <OfferLine offer={last.offer} />
-        <p className={`text-sm ${tone}`}>
-          Round {last.round}: {last.hint}
-        </p>
+        <p className={`text-sm ${tone}`}>{last.hint}</p>
       </div>
     </div>
   );
@@ -74,22 +71,28 @@ export function NegotiationOutcome({
   onClose: () => void;
 }) {
   const result = neg.result;
-  const tone =
-    neg.status === "accepted"
-      ? "border-good/40 text-good"
-      : "border-bad/40 text-bad";
+  const accepted = neg.status === "accepted";
   return (
-    <div className={`rounded border ${tone} bg-panel-2 px-3 py-3`}>
-      {result?.message && <p className="mb-2 text-sm font-semibold">{result.message}</p>}
+    <div
+      className={cn(
+        "anim-rise rounded-lg border px-4 py-3.5",
+        accepted ? "border-good/40 bg-good/[0.06]" : "border-bad/40 bg-bad/[0.06]",
+      )}
+    >
+      <p className={cn("t-label mb-1.5", accepted ? "text-good" : "text-bad")}>
+        {accepted ? "Done" : neg.status === "walked" ? "They walked" : "Talks over"}
+      </p>
+      {result?.message && (
+        <p className={cn("text-sm font-medium", accepted ? "text-good" : "text-bad")}>
+          {result.message}
+        </p>
+      )}
       {result && result.events.length > 0 && (
-        <div className="mb-2 max-h-40 overflow-y-auto">
+        <div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-line bg-panel p-1">
           <EventList events={result.events} />
         </div>
       )}
-      <button
-        onClick={onClose}
-        className="mt-1 w-full rounded border border-line bg-panel px-3 py-1.5 text-sm text-fg hover:bg-panel"
-      >
+      <button onClick={onClose} className={cn(buttonClass.secondary, "mt-3 w-full")}>
         Close
       </button>
     </div>
@@ -133,7 +136,7 @@ export function WalkAwayButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="text-xs text-faint underline-offset-2 hover:text-bad hover:underline disabled:opacity-50"
+      className="text-xs text-faint underline-offset-2 transition-colors hover:text-bad hover:underline disabled:opacity-50"
     >
       Walk away
     </button>

@@ -9,14 +9,13 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
 from football_agent.engine import persistence
-from football_agent.engine.events import Severity
 from football_agent.engine.tick import tick
 from football_agent.engine.world import create_world
 
 from .. import dto
 from ..negotiations import evict_all as evict_negotiations
 from ..session import (
-    INBOX_ACTION_KEEP_WEEKS,
+    INBOX_HISTORY_WEEKS,
     INBOX_LIMIT,
     Session,
     default_balance,
@@ -106,11 +105,13 @@ def continue_week(session: Session = Depends(get_active_session)) -> Dict[str, A
     """One press = one week. Reproduces the CLI's Continue exactly."""
     events = tick(session.world, session.balance)
     evict_negotiations(session)  # nothing survives a week boundary
+    # The inbox is now purely a history feed — "what happened" — because "what
+    # still needs me" is derived from world state instead. Previously this line
+    # discarded every non-ACTION event at each week boundary, which meant the
+    # Recent feed could only ever show the week just gone and the game had no
+    # readable memory at all. Keep a rolling window of everything instead.
     session.inbox = [
-        e
-        for e in session.inbox
-        if e.severity is Severity.ACTION
-        and e.week >= session.world.week - INBOX_ACTION_KEEP_WEEKS
+        e for e in session.inbox if e.week >= session.world.week - INBOX_HISTORY_WEEKS
     ]
     session.inbox.extend(events)
     session.inbox = session.inbox[-INBOX_LIMIT:]
@@ -136,9 +137,21 @@ def save_game(
 @router.get("/inbox")
 def get_inbox(limit: int = 40, session: Session = Depends(get_session)) -> Dict[str, Any]:
     events = list(session.inbox)
-    needs_decision = [e for e in events if e.severity is Severity.ACTION]
     recent = [e for e in events if e.kind not in dto.NOISE_KINDS]
     return {
-        "needs_decision": [dto.event_dto(e) for e in reversed(needs_decision[-limit:])],
+        # Derived from the world as it stands, not from the last four weeks of
+        # ACTION events. An item here is an obligation that is still open, so
+        # it disappears the moment you resolve it.
+        "needs_decision": dto.decisions_dto(session.world, session.balance),
         "recent": [dto.event_dto(e) for e in reversed(recent[-limit:])],
+    }
+
+
+@router.get("/decisions")
+def get_decisions(session: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Just the open decisions — what the rail, the badges and the dashboard read."""
+    decisions = dto.decisions_dto(session.world, session.balance)
+    return {
+        "decisions": decisions,
+        "actionable": sum(1 for d in decisions if d["actionable"]),
     }

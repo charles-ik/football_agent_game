@@ -1,7 +1,6 @@
-// Clients — one dense row per client: ability as a range bar (never a
-// number), trust as a mood with the number secondary, and flags for the
-// things that cost you money when ignored.
+// Clients — the roster.
 
+import { EmptyState, Panel, ScreenHeader } from "@/components/ui";
 import { getClients } from "@/lib/api";
 
 import { ClientsTable } from "./clients-table";
@@ -9,17 +8,28 @@ import { ClientsTable } from "./clients-table";
 export default async function ClientsPage() {
   const clients = await getClients();
 
-  if (clients.length === 0) {
-    return (
-      <p className="py-16 text-center text-sm text-faint">
-        You have no clients. Scout and sign someone.
-      </p>
-    );
-  }
+  const unsettled = clients.filter((c) => c.trust < 55).length;
+  const note =
+    clients.length === 0
+      ? undefined
+      : unsettled > 0
+        ? `${clients.length} on the books, ${unsettled} of them unsettled. Click a row for the detail.`
+        : `${clients.length} on the books, all settled. Click a row for the detail.`;
 
   return (
-    <div className="overflow-x-auto rounded border border-line bg-panel">
-      <ClientsTable clients={clients} />
+    <div>
+      <ScreenHeader title="Clients" note={note} />
+      {clients.length === 0 ? (
+        <EmptyState
+          title="You have no clients."
+          hint="An agency with nobody on its books earns nothing at all. Put a scout into a region, wait for a report, and sign the first name you can afford to approach."
+          action={{ href: "/scouting", label: "Go scouting" }}
+        />
+      ) : (
+        <Panel className="overflow-hidden">
+          <ClientsTable clients={clients} />
+        </Panel>
+      )}
     </div>
   );
 }

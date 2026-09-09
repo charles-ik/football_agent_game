@@ -1,68 +1,127 @@
-// Leagues — one table per league, rows highlighted where you have a client.
-// Context, not decision-making; kept plain.
+// Leagues — context, not decision-making, so it stays plain. The one thing it
+// must do well is show where your clients are: a client at a club sliding down
+// the table is about to lose his playing time, and that is where trust goes.
 
-import { getLeagues } from "@/lib/api";
+import Link from "next/link";
+
+import { PanelSection, ScreenHeader, Table, Td, Th, cn } from "@/components/ui";
+import { getClients, getLeagues } from "@/lib/api";
 
 export default async function LeaguesPage() {
-  const leagues = await getLeagues();
+  const [leagues, clients] = await Promise.all([getLeagues(), getClients()]);
+
+  // Which of your clients is at which club, so a highlighted row can say who.
+  const clientsByClub = new Map<string, string[]>();
+  for (const client of clients) {
+    const list = clientsByClub.get(client.club_name) ?? [];
+    list.push(client.player.name);
+    clientsByClub.set(client.club_name, list);
+  }
 
   return (
-    <div className="space-y-6">
-      {leagues.map((league) => (
-        <section key={league.id}>
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-dim">
-            {league.name}
-            <span className="ml-2 text-faint">tier {league.tier}</span>
-          </h2>
-          <div className="overflow-x-auto rounded border border-line bg-panel">
-            <table className="w-full text-sm">
+    <div className="space-y-5">
+      <ScreenHeader
+        title="Leagues"
+        note="A club's strength drives your client's playing time, and playing time drives everything else."
+      />
+      <div className="grid gap-4 2xl:grid-cols-2">
+        {leagues.map((league) => (
+          <PanelSection
+            key={league.id}
+            title={league.name}
+            note={`Tier ${league.tier}`}
+            bodyClassName="p-0"
+          >
+            <Table>
               <thead>
-                <tr className="border-b border-line text-left text-[11px] uppercase tracking-wider text-faint">
-                  <th className="px-3 py-2 font-medium">#</th>
-                  <th className="px-2 py-2 font-medium">Club</th>
-                  <th className="px-2 py-2 text-right font-medium">P</th>
-                  <th className="px-2 py-2 text-right font-medium">W</th>
-                  <th className="px-2 py-2 text-right font-medium">D</th>
-                  <th className="px-2 py-2 text-right font-medium">L</th>
-                  <th className="px-2 py-2 text-right font-medium">GF</th>
-                  <th className="px-2 py-2 text-right font-medium">GA</th>
-                  <th className="px-2 py-2 text-right font-medium">GD</th>
-                  <th className="px-2 py-2 text-right font-medium">Pts</th>
+                <tr>
+                  <Th align="right">#</Th>
+                  <Th>Club</Th>
+                  <Th align="right">P</Th>
+                  <Th align="right">W</Th>
+                  <Th align="right">D</Th>
+                  <Th align="right">L</Th>
+                  <Th align="right">GF</Th>
+                  <Th align="right">GA</Th>
+                  <Th align="right">GD</Th>
+                  <Th align="right">Pts</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line/50">
-                {league.table.map((row) => (
-                  <tr
-                    key={row.club_id}
-                    className={row.has_client ? "bg-accent/5 text-fg" : "text-dim"}
-                  >
-                    <td className="num px-3 py-1.5">{row.position}</td>
-                    <td className="px-2 py-1.5">
-                      {row.club_name}
-                      {row.has_client && (
-                        <span className="ml-2 rounded border border-accent/40 px-1 py-0.5 text-[10px] text-accent">
-                          your client
-                        </span>
+              <tbody>
+                {league.table.map((row) => {
+                  const yours = clientsByClub.get(row.club_name);
+                  return (
+                    <tr
+                      key={row.club_id}
+                      className={cn(
+                        "transition-colors",
+                        row.has_client
+                          ? "bg-accent/[0.06] text-fg hover:bg-accent/10"
+                          : "text-dim hover:bg-panel-2",
                       )}
-                    </td>
-                    <td className="num px-2 py-1.5 text-right">{row.played}</td>
-                    <td className="num px-2 py-1.5 text-right">{row.won}</td>
-                    <td className="num px-2 py-1.5 text-right">{row.drawn}</td>
-                    <td className="num px-2 py-1.5 text-right">{row.lost}</td>
-                    <td className="num px-2 py-1.5 text-right">{row.goals_for}</td>
-                    <td className="num px-2 py-1.5 text-right">{row.goals_against}</td>
-                    <td className="num px-2 py-1.5 text-right">
-                      {row.goal_difference >= 0 ? "+" : ""}
-                      {row.goal_difference}
-                    </td>
-                    <td className="num px-2 py-1.5 text-right font-semibold">{row.points}</td>
-                  </tr>
-                ))}
+                    >
+                      <Td align="right" className="num text-faint">
+                        {row.position}
+                      </Td>
+                      <Td>
+                        <span className="flex items-center gap-2">
+                          {row.has_client && (
+                            <span
+                              aria-hidden
+                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
+                            />
+                          )}
+                          <span className={row.has_client ? "font-medium" : ""}>
+                            {row.club_name}
+                          </span>
+                          {yours && (
+                            <span className="truncate text-[11px] text-accent/80">
+                              {yours.join(", ")}
+                            </span>
+                          )}
+                        </span>
+                      </Td>
+                      <Td align="right" className="num">
+                        {row.played}
+                      </Td>
+                      <Td align="right" className="num">
+                        {row.won}
+                      </Td>
+                      <Td align="right" className="num">
+                        {row.drawn}
+                      </Td>
+                      <Td align="right" className="num">
+                        {row.lost}
+                      </Td>
+                      <Td align="right" className="num">
+                        {row.goals_for}
+                      </Td>
+                      <Td align="right" className="num">
+                        {row.goals_against}
+                      </Td>
+                      <Td align="right" className="num">
+                        {row.goal_difference > 0 ? `+${row.goal_difference}` : row.goal_difference}
+                      </Td>
+                      <Td align="right" className="num font-semibold text-fg">
+                        {row.points}
+                      </Td>
+                    </tr>
+                  );
+                })}
               </tbody>
-            </table>
-          </div>
-        </section>
-      ))}
+            </Table>
+          </PanelSection>
+        ))}
+      </div>
+      {clients.length > 0 && (
+        <p className="t-note">
+          Rows marked in the accent colour are clubs where you have a client.{" "}
+          <Link href="/clients" className="text-accent hover:underline">
+            See your roster
+          </Link>
+          .
+        </p>
+      )}
     </div>
   );
 }

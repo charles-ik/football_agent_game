@@ -1,12 +1,17 @@
-// Client detail — the screen where most decisions are made. The only place
-// derived true-ability numbers (market value, asking price) are shown,
-// because he is already yours.
+// Client detail — where most decisions are actually made.
+//
+// This is the only screen allowed to show derived true-ability figures (market
+// value, asking price), because he is already yours and the CLI's detail screen
+// showed the same. Ability and potential remain ranges: signing him did not
+// make your read on him perfect.
 
 import { notFound } from "next/navigation";
+import { Activity, Building2, Shield } from "lucide-react";
 
 import { Money, Pct } from "@/components/money";
 import { RangeBar } from "@/components/range-bar";
 import { TrustMeter } from "@/components/trust-meter";
+import { Badge, Panel, PanelSection, ScreenHeader, StatTile, cn } from "@/components/ui";
 import { getClientDetail, getMeta, isApiError } from "@/lib/api";
 
 import { ClientActions, InterestCards } from "./client-panels";
@@ -36,111 +41,168 @@ export default async function ClientDetailPage({
   const autoNegotiate = negotiate ? Number.parseInt(negotiate, 10) : null;
   const { player, report } = detail;
 
+  const contractWeeks = detail.club_contract_weeks_left;
+  const contractTone =
+    contractWeeks === null ? "bad" : contractWeeks <= 26 ? "warn" : "default";
+  const agentTone = detail.agent_contract_weeks_left <= 12 ? "warn" : "default";
+
   return (
-    <div className="space-y-4">
-      {/* Identity panel */}
-      <section className="rounded border border-line bg-panel p-4">
-        <div className="mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <h1 className="text-lg font-bold">{player.name}</h1>
-          <span className="text-sm text-dim">
-            {player.age} · {player.position}
-          </span>
-          <span
-            className="rounded border border-line px-1.5 py-0.5 text-xs text-dim"
-            title={traitBlurbs[player.trait] ?? ""}
-          >
-            {player.trait}
-          </span>
-          {player.injury_weeks > 0 && (
-            <span className="rounded border border-bad/40 px-1.5 py-0.5 text-xs text-bad">
-              injured {player.injury_weeks}w
+    <div className="space-y-5">
+      <ScreenHeader
+        title={
+          <span className="flex flex-wrap items-baseline gap-3">
+            {player.name}
+            <span className="text-sm font-normal text-dim">
+              {player.age} · {player.position}
             </span>
-          )}
-        </div>
+            {/* Trait is the only thing making clients non-interchangeable, and
+                it predicts how he will take a move — so it is a first-class
+                label, not a footnote. */}
+            <Badge tone="accent" title={traitBlurbs[player.trait] ?? ""}>
+              {player.trait}
+            </Badge>
+            {player.injury_weeks > 0 && (
+              <Badge tone="bad">injured {player.injury_weeks}w</Badge>
+            )}
+            {player.transfer_listed && <Badge tone="warn">transfer-listed</Badge>}
+            {player.seeking_move && <Badge>seeking a move</Badge>}
+          </span>
+        }
+        note={traitBlurbs[player.trait]}
+      />
 
-        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm md:grid-cols-4">
-          <Field label="Club">
-            {detail.club ? (
-              <>
-                {detail.club.name}{" "}
-                <span className="text-faint">
-                  (str {Math.round(detail.club.strength)}, {detail.club.league_position}
-                  {ordinal(detail.club.league_position)})
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile
+          label="Wage"
+          value={<Money value={detail.wage} />}
+          sub={
+            contractWeeks === null
+              ? "No club — he is a free agent."
+              : `${contractWeeks} weeks left on his deal`
+          }
+          tone={contractTone === "bad" ? "bad" : contractTone === "warn" ? "warn" : "default"}
+        />
+        <StatTile
+          label="Your cut"
+          value={<Pct value={detail.commission_pct} />}
+          sub={`${detail.agent_contract_weeks_left} weeks left on your agreement`}
+          tone={agentTone === "warn" ? "warn" : "default"}
+        />
+        <StatTile label="Market value" value={<Money value={detail.market_value} />} />
+        <StatTile
+          label="Asking price"
+          value={<Money value={detail.asking_price} />}
+          sub="What his club would want to let him go."
+        />
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <PanelSection title="Where he is" bodyClassName="p-4">
+          <dl className="space-y-0">
+            <DetailRow icon={<Building2 size={13} aria-hidden />} label="Club">
+              {detail.club ? (
+                <span>
+                  {detail.club.name}{" "}
+                  <span className="num text-faint">
+                    · strength {Math.round(detail.club.strength)} ·{" "}
+                    {detail.club.league_position}
+                    {ordinal(detail.club.league_position)}
+                  </span>
                 </span>
-              </>
-            ) : (
-              "Free agent"
-            )}
-          </Field>
-          <Field label="Role">{detail.playing_time}</Field>
-          <Field label="Trust">
-            <TrustMeter trust={detail.trust} label={detail.trust_label} />
-          </Field>
-          <Field label="Wage">
-            <Money value={detail.wage} />
-            <span className="text-faint"> /wk</span>
-            {detail.club_contract_weeks_left !== null && (
-              <span className="text-faint"> · {detail.club_contract_weeks_left}w left</span>
-            )}
-          </Field>
-          <Field label="Your cut">
-            <Pct value={detail.commission_pct} />
-            <span className="text-faint"> · {detail.agent_contract_weeks_left}w left</span>
-          </Field>
-          <Field label="Market value">
-            <Money value={detail.market_value} />
-          </Field>
-          <Field label="Asking price">
-            <Money value={detail.asking_price} />
-          </Field>
-        </div>
+              ) : (
+                <span className="text-bad">Free agent</span>
+              )}
+            </DetailRow>
+            <DetailRow icon={<Activity size={13} aria-hidden />} label="Playing time">
+              <span className={ROLE_TONE[detail.playing_time] ?? "text-dim"}>
+                {detail.playing_time}
+              </span>
+            </DetailRow>
+            <DetailRow icon={<Shield size={13} aria-hidden />} label="Trust in you">
+              <TrustMeter trust={detail.trust} label={detail.trust_label} size="lg" />
+            </DetailRow>
+          </dl>
+          {/* Playing time is the rule that makes greed punishable, so when it
+              has gone wrong the screen says so in words, not just a colour. */}
+          {(detail.playing_time === "bench" || detail.playing_time === "reserve") && (
+            <p className="t-note mt-3 text-warn">
+              He is not playing. He will stop developing, and his trust in you will keep sliding
+              until that changes — a bigger wage does not compensate for it.
+            </p>
+          )}
+        </PanelSection>
 
-        {report && (
-          <div className="mt-3 flex flex-wrap gap-8 border-t border-line pt-3">
-            <div>
-              <div className="mb-0.5 text-[11px] uppercase tracking-wider text-faint">Ability</div>
-              <RangeBar
-                low={report.ability_low}
-                high={report.ability_high}
-                confidence={report.confidence}
-              />
-            </div>
-            <div>
-              <div className="mb-0.5 text-[11px] uppercase tracking-wider text-faint">
-                Potential
+        <PanelSection
+          title="Your read on him"
+          note="Even your own client is an estimate. More weeks watched, better scouts and a bigger reputation all tighten it."
+        >
+          {report ? (
+            <div className="space-y-4">
+              <div>
+                <div className="t-label mb-1.5">Ability now</div>
+                <RangeBar
+                  low={report.ability_low}
+                  high={report.ability_high}
+                  confidence={report.confidence}
+                  size="lg"
+                />
               </div>
-              <RangeBar
-                low={report.potential_low}
-                high={report.potential_high}
-                confidence={report.confidence}
-              />
+              <div>
+                <div className="t-label mb-1.5">Potential</div>
+                <RangeBar
+                  low={report.potential_low}
+                  high={report.potential_high}
+                  confidence={report.confidence}
+                  size="lg"
+                />
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          ) : (
+            <p className="t-note">No scouting report on him.</p>
+          )}
+        </PanelSection>
+      </div>
 
-      {/* Approaches */}
-      <section>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-dim">
-          Approaches
-        </h2>
+      <PanelSection
+        title="Approaches"
+        note="Clubs circling him. Each one is a single, spendable negotiation."
+        tone={detail.interests.some((i) => i.can_negotiate.ok) ? "action" : "default"}
+        bodyClassName="p-4"
+      >
         <InterestCards detail={detail} autoNegotiate={autoNegotiate} />
-      </section>
+      </PanelSection>
 
-      {/* Actions */}
-      <section>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-dim">Actions</h2>
+      <PanelSection title="What you can do about him">
         <ClientActions detail={detail} />
-      </section>
+      </PanelSection>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+const ROLE_TONE: Record<string, string> = {
+  star: "text-good",
+  regular: "text-fg",
+  rotation: "text-dim",
+  bench: "text-warn",
+  reserve: "text-bad",
+};
+
+function DetailRow({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div>
-      <span className="mr-2 text-xs text-faint">{label}</span>
-      <span>{children}</span>
+    <div className="flex items-center justify-between gap-4 border-b border-line/50 py-2.5 last:border-0">
+      <dt className="flex items-center gap-2 text-xs text-dim">
+        <span className="text-faint">{icon}</span>
+        {label}
+      </dt>
+      <dd className={cn("text-right text-sm")}>{children}</dd>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { useToast } from "@/components/toaster";
+import { buttonClass, cn, inputClass } from "@/components/ui";
 import { loadGame, newGame } from "@/lib/actions";
 import type { SaveSlot } from "@/lib/types";
 
@@ -55,64 +56,64 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
   return (
     <div className="space-y-6">
       <form
-        className="space-y-4 rounded border border-line bg-panel p-5"
+        className="space-y-4 rounded-xl border border-line bg-panel p-5"
         onSubmit={(event) => {
           event.preventDefault();
           start();
         }}
       >
         <label className="block text-sm">
-          <span className="mb-1 block text-dim">Agency name</span>
+          <span className="t-label mb-1.5 block">Agency name</span>
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="w-full rounded border border-line bg-panel-2 px-3 py-1.5 outline-none focus:border-accent"
+            className={inputClass}
             maxLength={48}
           />
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-dim">Seed (optional)</span>
+          <span className="t-label mb-1.5 block">Seed (optional)</span>
           <input
             value={seed}
             onChange={(event) => setSeed(event.target.value)}
             placeholder="random"
             inputMode="numeric"
-            className="w-full rounded border border-line bg-panel-2 px-3 py-1.5 outline-none focus:border-accent"
+            className={inputClass}
           />
-          <span className="mt-1 block text-xs text-faint">
+          <span className="t-note mt-1.5 block">
             Same seed, same world — useful for comparing runs.
           </span>
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-dim">Save slot</span>
+          <span className="t-label mb-1.5 block">Save slot</span>
           <input
             value={slot}
             onChange={(event) => setSlot(event.target.value)}
-            className="w-full rounded border border-line bg-panel-2 px-3 py-1.5 outline-none focus:border-accent"
+            className={inputClass}
             maxLength={32}
           />
-          <span className="mt-1 block text-xs text-faint">
+          <span className="t-note mt-1.5 block">
             Lowercase letters, numbers and dashes. The game autosaves here after every week.
           </span>
         </label>
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded bg-accent px-4 py-2 font-semibold text-ink hover:bg-accent/90 disabled:opacity-50"
+          className={cn(buttonClass.primary, "w-full py-2")}
         >
           {pending ? "…" : "Start a new agency"}
         </button>
       </form>
 
       <form
-        className="space-y-3 rounded border border-line bg-panel p-5"
+        className="space-y-3 rounded-xl border border-line bg-panel p-5"
         onSubmit={(event) => {
           event.preventDefault();
           load();
         }}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-dim">Load a saved game</h2>
+          <h2 className="t-section">Load a saved game</h2>
           {saves.length > 0 && (
             <button
               type="button"
@@ -128,13 +129,13 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
             <input
               value={manualSlot}
               onChange={(event) => setManualSlot(event.target.value)}
-              className="flex-1 rounded border border-line bg-panel-2 px-3 py-1.5 text-sm outline-none focus:border-accent"
+              className={cn(inputClass, "flex-1")}
               maxLength={32}
             />
             <button
               type="submit"
               disabled={pending}
-              className="rounded border border-line px-4 py-1.5 text-sm hover:bg-panel-2 disabled:opacity-50"
+              className={buttonClass.secondary}
             >
               Load
             </button>
@@ -146,7 +147,7 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
             <select
               value={loadSlot}
               onChange={(event) => setLoadSlot(event.target.value)}
-              className="flex-1 rounded border border-line bg-panel-2 px-3 py-1.5 text-sm outline-none focus:border-accent"
+              className={cn(inputClass, "flex-1")}
             >
               {saves.map((save) => (
                 <option key={save.slot} value={save.slot} disabled={!save.compatible}>
@@ -160,7 +161,7 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
             <button
               type="submit"
               disabled={pending}
-              className="rounded border border-line px-4 py-1.5 text-sm hover:bg-panel-2 disabled:opacity-50"
+              className={buttonClass.secondary}
             >
               Load
             </button>

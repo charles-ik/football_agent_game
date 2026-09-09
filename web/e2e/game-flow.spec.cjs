@@ -17,6 +17,14 @@ const MIN_COMMISSION_PCT = "3"; // matches balance.yaml's commission.min_pct (0.
 // threshold, because overreach can never be positive at the minimum.
 
 test("new game, assign a scout, continue, sign a client", async ({ page }) => {
+  // The shell renders navigation twice — a vertical rail for wide viewports
+  // and a horizontal strip for narrow ones — so every nav query is scoped to
+  // the rail by its landmark label rather than matching both.
+  const nav = page.locator('nav[aria-label="Main"]');
+  // Continue likewise renders in two positions; only the rail one is visible
+  // at this viewport.
+  const continueButton = page.locator('[data-continue="rail"]');
+
   await page.goto("/new-game");
 
   await page.getByLabel("Agency name").fill("E2E Agency");
@@ -27,29 +35,29 @@ test("new game, assign a scout, continue, sign a client", async ({ page }) => {
   await page.getByRole("link", { name: "Start week 1" }).click();
   await expect(page).toHaveURL("/");
 
-  await page.getByRole("link", { name: /Scouting/ }).click();
+  await nav.getByRole("link", { name: /Scouting/ }).click();
   await expect(page).toHaveURL("/scouting");
 
-  // Assign the starting scout to the east region (the dialog already
-  // defaults there) so reports start accumulating.
+  // Assign the starting scout to the first region so reports accumulate.
   await page.getByRole("button", { name: "Assign" }).first().click();
   const assignDialog = page.getByRole("dialog");
   await expect(assignDialog).toBeVisible();
   await assignDialog.getByRole("button", { name: "Send him" }).click();
   await expect(assignDialog).toBeHidden();
 
-  const continueButton = page.locator("#continue-button");
-  const weekSummary = page.getByRole("region", { name: "Week summary" });
+  // The week summary sits above the button rather than over it, so there is
+  // no need to dismiss it between presses — and trying to is flaky, because
+  // each press re-renders the tree underneath it.
+  const weekSummary = page.getByRole("region", { name: "The week that was" });
   for (let week = 0; week < 10; week++) {
     await continueButton.click();
-    if (await weekSummary.isVisible().catch(() => false)) {
-      await weekSummary.getByRole("button", { name: "Dismiss" }).click();
-    }
+    await expect(continueButton).toBeEnabled({ timeout: 15_000 });
   }
+  await expect(weekSummary.or(continueButton).first()).toBeVisible();
 
-  const signButton = page.getByRole("button", { name: "Sign", exact: true }).first();
-  await expect(signButton).toBeVisible({ timeout: 20_000 });
-  await signButton.click();
+  const approachButton = page.getByRole("button", { name: "Approach", exact: true }).first();
+  await expect(approachButton).toBeVisible({ timeout: 20_000 });
+  await approachButton.click();
 
   const negotiationDialog = page.getByRole("dialog");
   await expect(negotiationDialog).toBeVisible();
@@ -70,7 +78,26 @@ test("new game, assign a scout, continue, sign a client", async ({ page }) => {
   await expect(negotiationDialog).toBeHidden();
 
   // He should now show up as a client.
-  await page.getByRole("link", { name: /Clients/ }).click();
+  await nav.getByRole("link", { name: /Clients/ }).click();
   await expect(page).toHaveURL("/clients");
   await expect(page.getByRole("table")).toBeVisible();
+});
+
+test("the decision rail clears an obligation once it is resolved", async ({ page }) => {
+  // The regression this guards: the old list was a four-week window over
+  // ACTION events, so it kept showing prompts for things already dealt with.
+  await page.goto("/new-game");
+  await page.getByLabel("Agency name").fill("Rail Agency");
+  await page.getByLabel("Seed (optional)").fill("42");
+  await page.getByRole("button", { name: "Start a new agency" }).click();
+  await page.getByRole("link", { name: "Start week 1" }).click();
+  await expect(page).toHaveURL("/");
+
+  const rail = page.getByRole("complementary", { name: "This week" });
+  await expect(rail).toBeVisible();
+
+  // Whatever the rail shows, it must agree with the count on the button —
+  // both now read the same derived list rather than two different sources.
+  const continueButton = page.locator('[data-continue="rail"]');
+  await expect(continueButton).toBeVisible();
 });

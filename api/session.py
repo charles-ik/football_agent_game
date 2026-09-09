@@ -31,7 +31,9 @@ if TYPE_CHECKING:
 COOKIE_NAME = "fa_session"
 SESSION_TTL_SECONDS = 24 * 60 * 60
 INBOX_LIMIT = 120
-INBOX_ACTION_KEEP_WEEKS = 4
+# How many weeks of history the feed remembers. The feed is memory only —
+# outstanding obligations are derived from world state in engine.decisions.
+INBOX_HISTORY_WEEKS = 12
 
 SLOT_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,31}$")
 
@@ -60,11 +62,6 @@ class Session:
 
     def touch(self) -> None:
         self.last_seen = time.time()
-
-    def pending_actions(self) -> int:
-        from football_agent.engine.events import Severity
-
-        return sum(1 for e in self.inbox if e.severity is Severity.ACTION)
 
 
 class SessionStore:

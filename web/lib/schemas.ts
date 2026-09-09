@@ -90,8 +90,44 @@ export const continueSchema = z.object({
   notable: z.array(eventSchema),
 });
 
+// A decision is an *open obligation*, derived from world state rather than
+// sliced out of the event feed, so it disappears the moment it is resolved.
+export const decisionSchema = z.object({
+  id: z.string(),
+  kind: z.enum([
+    "contract_expired",
+    "contract_expiring",
+    "agent_contract_expiring",
+    "approach",
+  ]),
+  severity: z.enum(["info", "good", "warning", "critical", "action"]),
+  headline: z.string(),
+  detail: z.string(),
+  player_id: z.number().nullable(),
+  interest_id: z.number().nullable(),
+  weeks_left: z.number().nullable(),
+  actionable: z.boolean(),
+  blocked_reason: z.string(),
+  href: z.string(),
+  extra: z
+    .object({
+      is_renewal: z.boolean().optional(),
+      club_name: z.string().optional(),
+      max_wage: moneySchema.optional(),
+      current_wage: moneySchema.optional(),
+      wage_delta: moneySchema.optional(),
+      improves_terms: z.boolean().optional(),
+    })
+    .passthrough(),
+});
+
+export const decisionsSchema = z.object({
+  decisions: z.array(decisionSchema),
+  actionable: z.number(),
+});
+
 export const inboxSchema = z.object({
-  needs_decision: z.array(eventSchema),
+  needs_decision: z.array(decisionSchema),
   recent: z.array(eventSchema),
 });
 

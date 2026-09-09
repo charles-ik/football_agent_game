@@ -78,6 +78,7 @@ import {
   financesSchema,
   gameStateSchema,
   hqSchema,
+  decisionsSchema,
   inboxSchema,
   leaguesSchema,
   metaSchema,
@@ -87,6 +88,7 @@ import {
 import type {
   ClientDetail,
   ClientRow,
+  DecisionsResponse,
   FinancesState,
   GameState,
   HQState,
@@ -104,6 +106,9 @@ export const getGameState = () =>
 
 export const getInbox = (limit = 60) =>
   api<InboxResponse>(`/api/game/inbox?limit=${limit}`).then((d) => inboxSchema.parse(d));
+
+export const getDecisions = () =>
+  api<DecisionsResponse>("/api/game/decisions").then((d) => decisionsSchema.parse(d));
 
 export const getScouting = () =>
   api<ScoutingState>("/api/scouting").then((d) => scoutingStateSchema.parse(d));

@@ -1,13 +1,18 @@
 "use client";
 
 // The CLI's muscle memory, preserved: C continues, 1–6 navigate, Esc closes
-// dialogs (handled by the dialogs themselves). Keys are ignored while typing
-// in a field or while a dialog is open.
+// dialogs (the dialogs own that key themselves). Ignored while typing in a
+// field or while a dialog is open.
+//
+// Continue is triggered by dispatching an event rather than clicking an id,
+// because the button renders in two positions depending on viewport width and
+// only the visible one should act.
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-const ROUTES = ["/", "/clients", "/scouting", "/headquarters", "/finances", "/leagues"];
+import { CONTINUE_EVENT } from "@/components/continue-button";
+import { NAV } from "@/components/shell/nav-rail";
 
 export function KeyboardShortcuts() {
   const router = useRouter();
@@ -17,17 +22,17 @@ export function KeyboardShortcuts() {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+      if (target?.isContentEditable) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (document.querySelector('[role="dialog"]')) return; // dialogs own their keys
 
       if (event.key === "c" || event.key === "C") {
-        document.getElementById("continue-button")?.click();
+        window.dispatchEvent(new CustomEvent(CONTINUE_EVENT));
         return;
       }
       const index = Number.parseInt(event.key, 10) - 1;
-      if (index >= 0 && index < ROUTES.length && ROUTES[index] !== pathname) {
-        router.push(ROUTES[index]);
-      }
+      const route = NAV[index]?.href;
+      if (route && route !== pathname) router.push(route);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

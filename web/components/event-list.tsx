@@ -1,9 +1,14 @@
-// The event feed. Severity drives the colour *and* an icon — colour is never
-// the only thing distinguishing a row. Events carrying ids deep-link:
-// player_id -> client detail, interest_id -> straight into the deal flow.
+// The history feed — what happened, in order. It is memory, not obligation:
+// anything still waiting on you is a Decision and lives in its own list.
+//
+// Two rules keep it readable. Severity drives a colour *and* a glyph, so colour
+// is never the only signal. And identical messages repeated across consecutive
+// weeks collapse into one row with a count, because a standing condition
+// restated every week is what turns a feed into wallpaper.
 
 import Link from "next/link";
 
+import { cn } from "@/components/ui";
 import type { EventDTO, Severity } from "@/lib/types";
 
 const SEVERITY_ICON: Record<Severity, string> = {
@@ -27,7 +32,10 @@ const SEVERITY_RANK: Record<Severity, number> = {
 export function sortBySeverity(events: EventDTO[]): EventDTO[] {
   return events
     .map((event, index) => ({ event, index }))
-    .sort((a, b) => SEVERITY_RANK[a.event.severity] - SEVERITY_RANK[b.event.severity] || a.index - b.index)
+    .sort(
+      (a, b) =>
+        SEVERITY_RANK[a.event.severity] - SEVERITY_RANK[b.event.severity] || a.index - b.index,
+    )
     .map((entry) => entry.event);
 }
 
@@ -42,9 +50,7 @@ export function eventHref(event: EventDTO): string | null {
   return null;
 }
 
-/** Which nav section an event's decision belongs to, for the header's
- * per-item badges — the same routing eventHref already encodes, collapsed to
- * a top-level section. */
+/** Which nav section an event belongs to, collapsed to a top-level route. */
 export function navRouteForEvent(event: EventDTO): string | null {
   const href = eventHref(event);
   if (!href) return null;
@@ -53,22 +59,52 @@ export function navRouteForEvent(event: EventDTO): string | null {
   return null;
 }
 
-export function EventRow({ event, showWeek = false }: { event: EventDTO; showWeek?: boolean }) {
+/**
+ * Collapse runs of the same message into a single entry carrying a repeat
+ * count and the week range it covered.
+ */
+export function collapseRepeats(events: EventDTO[]): { event: EventDTO; repeats: number }[] {
+  const out: { event: EventDTO; repeats: number }[] = [];
+  for (const event of events) {
+    const last = out[out.length - 1];
+    if (last && last.event.message === event.message) last.repeats += 1;
+    else out.push({ event, repeats: 1 });
+  }
+  return out;
+}
+
+export function EventRow({
+  event,
+  showWeek = false,
+  repeats = 1,
+}: {
+  event: EventDTO;
+  showWeek?: boolean;
+  repeats?: number;
+}) {
   const href = eventHref(event);
   const body = (
-    <div className="flex items-baseline gap-2 px-2 py-1">
-      <span className={`sev-${event.severity} w-3 shrink-0 text-center`} aria-hidden>
+    <div className="flex items-baseline gap-2 px-2 py-1.5">
+      <span
+        className={cn("w-3 shrink-0 text-center text-xs", `sev-${event.severity}`)}
+        aria-hidden
+      >
         {SEVERITY_ICON[event.severity]}
       </span>
-      {showWeek && <span className="num w-10 shrink-0 text-xs text-faint">w{event.week}</span>}
-      <span className={`text-sm sev-${event.severity === "info" ? "info" : event.severity}`}>
+      {showWeek && <span className="num w-9 shrink-0 text-[11px] text-faint">w{event.week}</span>}
+      <span className={cn("text-[13px] leading-snug", `sev-${event.severity}`)}>
         {event.message}
+        {repeats > 1 && (
+          <span className="num ml-1.5 rounded bg-panel-3 px-1 text-[10px] text-faint">
+            ×{repeats}
+          </span>
+        )}
       </span>
     </div>
   );
   if (!href) return body;
   return (
-    <Link href={href} className="block rounded hover:bg-panel-2">
+    <Link href={href} className="block rounded transition-colors hover:bg-panel-2">
       {body}
     </Link>
   );
@@ -82,16 +118,19 @@ export function EventList({
   grouped?: boolean;
 }) {
   if (events.length === 0) return null;
+
   if (!grouped) {
     return (
-      <div className="divide-y divide-line/50">
-        {events.map((event, index) => (
-          <EventRow key={`${event.week}-${index}`} event={event} showWeek />
+      <div className="divide-y divide-line/40">
+        {collapseRepeats(events).map(({ event, repeats }, index) => (
+          <EventRow key={`${event.week}-${index}`} event={event} showWeek repeats={repeats} />
         ))}
       </div>
     );
   }
-  // Grouped by week, newest first, with a small divider.
+
+  // Grouped by week, newest first, with a sticky week divider so you always
+  // know which week the rows you are looking at belong to.
   const byWeek = new Map<number, EventDTO[]>();
   for (const event of events) {
     const list = byWeek.get(event.week) ?? [];
@@ -99,16 +138,17 @@ export function EventList({
     byWeek.set(event.week, list);
   }
   const weeks = [...byWeek.keys()].sort((a, b) => b - a);
+
   return (
     <div>
       {weeks.map((week) => (
         <div key={week}>
-          <div className="mt-3 border-b border-line px-2 pb-1 text-[11px] uppercase tracking-wider text-faint">
-            Week {week}
+          <div className="sticky top-0 z-10 border-b border-line bg-panel/95 px-2 py-1 backdrop-blur">
+            <span className="t-label">Week {week}</span>
           </div>
-          <div className="divide-y divide-line/50">
-            {(byWeek.get(week) ?? []).map((event, index) => (
-              <EventRow key={index} event={event} />
+          <div className="divide-y divide-line/40">
+            {collapseRepeats(byWeek.get(week) ?? []).map(({ event, repeats }, index) => (
+              <EventRow key={index} event={event} repeats={repeats} />
             ))}
           </div>
         </div>

@@ -19,6 +19,7 @@ from football_agent.engine import actions
 from football_agent.engine import calendar as cal
 from football_agent.engine import reputation as reputation_module
 from football_agent.engine.balance import Balance
+from football_agent.engine.decisions import Decision, open_decisions
 from football_agent.engine.economy import format_money, market_value
 from football_agent.engine.events import Event
 from football_agent.engine.models import Interest, Player, Scout, ScoutingReport, World
@@ -31,7 +32,22 @@ from football_agent.engine.world import hq_level, hq_levels
 
 from .session import Session
 
-NOISE_KINDS = {"finance.retainer", "league.round", "scouting.narrowed"}
+# Kinds the history feed never shows. These are either pure chrome (the status
+# bar already says which week it is), or per-week bookkeeping that the Finances
+# screen presents far better than a repeated one-line entry. Leaving them in
+# meant the feed said the same three things every single week, which is how a
+# feed teaches you not to read it.
+NOISE_KINDS = {
+    "finance.retainer",
+    "finance.costs",
+    "league.round",
+    "scouting.narrowed",
+    "week.advanced",
+    # A standing condition, not news. It is a decision-adjacent warning shown on
+    # the dashboard and the Scouting screen for as long as it is true, rather
+    # than a fresh line in the log every week it stays true.
+    "scouting.idle",
+}
 
 
 def money(amount: float) -> Dict[str, Any]:
@@ -47,6 +63,53 @@ def event_dto(event: Event) -> Dict[str, Any]:
         "severity": event.severity.value,
         "data": dict(event.data),
     }
+
+
+# ---------------------------------------------------------------------------
+# Decisions
+# ---------------------------------------------------------------------------
+
+
+def decision_dto(decision: Decision) -> Dict[str, Any]:
+    """One open obligation. `href` is computed here so every surface that shows
+    a decision — rail, dashboard, nav badge — routes it to the same place."""
+    if decision.player_id is not None and decision.interest_id is not None:
+        href = f"/clients/{decision.player_id}?negotiate={decision.interest_id}"
+    elif decision.player_id is not None:
+        href = f"/clients/{decision.player_id}"
+    else:
+        href = "/"
+    return {
+        "id": decision.id,
+        "kind": decision.kind,
+        "severity": decision.severity.value,
+        "headline": decision.headline,
+        "detail": decision.detail,
+        "player_id": decision.player_id,
+        "interest_id": decision.interest_id,
+        "weeks_left": decision.weeks_left,
+        "actionable": decision.actionable,
+        "blocked_reason": decision.blocked_reason,
+        "href": href,
+        "extra": _decision_extra(decision.extra),
+    }
+
+
+# Money in `extra` crosses the wire preformatted like every other figure, so the
+# UI never reimplements format_money's voice.
+_MONEY_KEYS = ("max_wage", "current_wage", "wage_delta")
+
+
+def _decision_extra(extra: Dict[str, Any]) -> Dict[str, Any]:
+    out = dict(extra)
+    for key in _MONEY_KEYS:
+        if key in out:
+            out[key] = money(out[key])
+    return out
+
+
+def decisions_dto(world: World, balance: Balance) -> List[Dict[str, Any]]:
+    return [decision_dto(d) for d in open_decisions(world, balance)]
 
 
 def player_dto(world: World, player: Player) -> Dict[str, Any]:
@@ -108,6 +171,10 @@ def game_state_dto(session: Session) -> Dict[str, Any]:
     world, balance = session.world, session.balance
     agency = world.agency
     level = hq_level(balance, agency.hq_level)
+    # The badge counts *open* decisions, not recent ACTION events. Those two
+    # numbers used to disagree constantly: the badge kept counting things you
+    # had already dealt with, because an event cannot be un-emitted.
+    decisions = open_decisions(world, balance)
     return {
         "agency": {
             "name": agency.name,
@@ -137,7 +204,7 @@ def game_state_dto(session: Session) -> Dict[str, Any]:
             "scout_cap": actions.scout_cap(world, balance),
         },
         "weekly_net": money(weekly_burn(world, balance)),
-        "pending_actions": session.pending_actions(),
+        "pending_actions": sum(1 for d in decisions if d.actionable),
         "game_over": world.game_over,
         "game_over_reason": world.game_over_reason,
     }

@@ -10,6 +10,7 @@ import { useEffect, useState, useTransition } from "react";
 
 import { Money } from "@/components/money";
 import { useToast } from "@/components/toaster";
+import { buttonClass, cn } from "@/components/ui";
 import {
   abandonNegotiation,
   acceptCounter,
@@ -77,30 +78,41 @@ export function PackageHaggle({
   return (
     <div className="space-y-4">
       {/* Opening panel: the club, the ceilings, the asking price, the warning. */}
-      <div className="rounded border border-line bg-panel-2 px-3 py-2 text-xs text-dim">
-        <div className="mb-1 flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="font-semibold text-fg">{neg.subject}</span>
-          <span>
+      <div className="rounded-lg border border-line bg-panel-2 px-3.5 py-3">
+        <div className="mb-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="text-sm font-semibold text-fg">{neg.subject}</span>
+          <span className="text-xs text-dim">
             for {context.player?.name ?? "your client"} · {context.years ?? 3} years
           </span>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-0.5">
-          <span>
-            wage ceiling <Money value={bounds.max_wage} className="text-fg" />/wk
-          </span>
+        <dl className="grid grid-cols-3 gap-3">
+          <div>
+            <dt className="t-label">Wage ceiling</dt>
+            <dd className="mt-0.5 text-sm">
+              <Money value={bounds.max_wage} className="text-fg" />
+              <span className="text-faint">/wk</span>
+            </dd>
+          </div>
           {!feeHidden && (
-            <span>
-              fee ceiling <Money value={bounds.max_fee} className="text-fg" />
-            </span>
+            <div>
+              <dt className="t-label">Fee ceiling</dt>
+              <dd className="mt-0.5 text-sm">
+                <Money value={bounds.max_fee} className="text-fg" />
+              </dd>
+            </div>
           )}
           {!feeHidden && (
-            <span>
-              asking price <Money value={bounds.asking_price} className="text-fg" />
-            </span>
+            <div>
+              <dt className="t-label">Asking price</dt>
+              <dd className="mt-0.5 text-sm">
+                <Money value={bounds.asking_price} className="text-fg" />
+              </dd>
+            </div>
           )}
-        </div>
-        <p className="mt-2 text-warn">
-          One negotiation per approach — naming a number spends it.
+        </dl>
+        <p className="mt-3 text-xs text-warn">
+          One negotiation per approach — naming a number spends it, and a walk-away cannot be
+          re-rolled.
         </p>
       </div>
 
@@ -130,49 +142,77 @@ export function PackageHaggle({
             )}
           </div>
 
-          {/* The verdict, in the same glance as Submit. */}
-          <div className="rounded border border-line bg-panel-2 px-3 py-2 text-sm">
+          {/* The verdict, in the same glance as Submit. This is not decoration:
+              it is the thing that turns the greedy deal from a trap into an
+              informed choice, so it must never be somewhere you can miss it. */}
+          <div
+            className={cn(
+              "rounded-lg border px-3.5 py-2.5",
+              !assessment
+                ? "border-line bg-panel-2"
+                : assessment.trust_delta < 0
+                  ? "border-warn/40 bg-warn/[0.06]"
+                  : "border-good/35 bg-good/[0.06]",
+            )}
+          >
+            <div className="t-label mb-1">How he will take it</div>
             {assessment ? (
-              <span className={assessment.trust_delta < 0 ? "text-warn" : "text-good"}>
+              <p
+                className={cn(
+                  "text-sm",
+                  assessment.trust_delta < 0 ? "text-warn" : "text-good",
+                )}
+              >
                 {assessment.verdict}{" "}
                 <span className="num text-faint">
                   (trust {assessment.trust_delta >= 0 ? "+" : ""}
                   {assessment.trust_delta.toFixed(0)})
                 </span>
-              </span>
+              </p>
             ) : (
-              <span className="text-faint">Reading his mood…</span>
+              <p className="text-sm text-faint">Reading his mood…</p>
             )}
           </div>
 
           {counter && (
-            <div className="flex flex-wrap items-center gap-2 rounded border border-line bg-panel-2 px-3 py-2 text-sm">
-              <span className="text-dim">
-                {finalRound ? "Final offer: " : "They counter with "}
-                <Money value={counter.wage} className="font-semibold text-fg" />/wk
-                {!feeHidden && counter.fee.amount > 0 && (
-                  <>
-                    {" "}+ <Money value={counter.fee} className="font-semibold text-fg" />
-                  </>
-                )}
-              </span>
-              <div className="ml-auto flex gap-2">
-                <button
-                  onClick={() => run(() => acceptCounter(neg.id))}
-                  disabled={pending}
-                  className="rounded bg-accent px-3 py-1.5 text-sm font-semibold text-ink hover:bg-accent/90 disabled:opacity-50"
-                >
-                  Take their terms
-                </button>
+            <div
+              className={cn(
+                "anim-slide-in flex flex-wrap items-center gap-3 rounded-lg border px-3.5 py-3",
+                finalRound ? "border-warn/40 bg-warn/[0.06]" : "border-line bg-panel-2",
+              )}
+            >
+              <div>
+                <div className={cn("t-label", finalRound && "text-warn")}>
+                  {finalRound ? "Their final offer" : "They counter"}
+                </div>
+                <p className="mt-0.5 text-lg font-semibold">
+                  <Money value={counter.wage} className="text-fg" />
+                  <span className="text-sm text-faint">/wk</span>
+                  {!feeHidden && counter.fee.amount > 0 && (
+                    <>
+                      <span className="text-sm text-faint"> + </span>
+                      <Money value={counter.fee} className="text-fg" />
+                    </>
+                  )}
+                </p>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
                 {!finalRound && (
                   <button
                     onClick={() => run(() => proposePackage(neg.id, wage, fee))}
                     disabled={pending}
-                    className="rounded border border-line px-3 py-1.5 text-sm text-dim hover:bg-panel disabled:opacity-50"
+                    className={buttonClass.ghost}
                   >
                     Push again
                   </button>
                 )}
+                <button
+                  onClick={() => run(() => acceptCounter(neg.id))}
+                  disabled={pending}
+                  className={buttonClass.primary}
+                >
+                  Take their terms
+                </button>
               </div>
             </div>
           )}
@@ -189,7 +229,7 @@ export function PackageHaggle({
               <button
                 onClick={() => run(() => proposePackage(neg.id, wage, fee))}
                 disabled={pending}
-                className="rounded bg-accent px-4 py-1.5 text-sm font-semibold text-ink hover:bg-accent/90 disabled:opacity-50"
+                className={buttonClass.primary}
               >
                 Submit the package
               </button>
@@ -227,9 +267,9 @@ function PackageInput({
   const floorAt = floor > 0 ? Math.max(0, Math.min(100, (floor / max) * 100)) : null;
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between text-xs text-dim">
-        <span>{label}</span>
-        <span className="num text-faint">
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="t-label">{label}</span>
+        <span className="num text-[11px] text-faint">
           guide {(guideLow / 1000).toFixed(0)}k–{(guideHigh / 1000).toFixed(0)}k · ceiling{" "}
           {(ceiling / 1000).toFixed(0)}k
         </span>
@@ -244,23 +284,23 @@ function PackageInput({
             const next = Number(event.target.value);
             if (!Number.isNaN(next)) onChange(Math.max(0, next));
           }}
-          className="num w-28 rounded border border-line bg-panel-2 px-2 py-1 text-sm outline-none focus:border-accent"
+          className="num w-28 rounded-md border border-line bg-panel-2 px-2 py-1.5 text-sm outline-none transition-colors focus:border-accent"
           aria-label={label}
         />
-        <div className="relative h-2 flex-1 rounded bg-panel-2">
+        <div className="relative h-2 flex-1 rounded-full border border-line/70 bg-panel-2">
           <div
-            className="absolute h-2 rounded bg-accent/25"
+            className="absolute h-full rounded-full bg-accent/25"
             style={{ left: `${bandLeft}%`, width: `${bandWidth}%` }}
           />
           {floorAt !== null && (
             <div
-              className="absolute h-2 w-0.5 bg-warn"
+              className="absolute h-full w-0.5 bg-warn"
               style={{ left: `${floorAt}%` }}
-              title="Asking price"
+              title="Asking price — below this the selling club says no"
             />
           )}
           <div
-            className="absolute h-2 w-0.5 bg-fg"
+            className="absolute -top-0.5 h-3 w-0.5 rounded-full bg-fg transition-[left] duration-150"
             style={{ left: `${marker}%` }}
           />
         </div>

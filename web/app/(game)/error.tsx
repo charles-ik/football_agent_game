@@ -27,7 +27,7 @@ export default function GameError({
       </p>
       <button
         onClick={reset}
-        className="rounded bg-accent px-4 py-1.5 text-sm font-semibold text-ink hover:bg-accent/90"
+        className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-accent/90"
       >
         Refresh
       </button>

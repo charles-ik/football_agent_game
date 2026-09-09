@@ -53,6 +53,7 @@ decisions would evaporate.
 | --- | --- |
 | [docs/how-to-run.md](docs/how-to-run.md) | Running the game, the tests and the tuning harness |
 | [docs/v1-python-build-plan.md](docs/v1-python-build-plan.md) | The full design, the reasoning behind each decision, and what was deliberately deferred |
+| [documentation/](documentation/README.md) | What was actually shipped: the web design system, the app shell, and the decisions model |
 
 ## Status
 

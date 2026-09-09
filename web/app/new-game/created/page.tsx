@@ -18,7 +18,7 @@ export default async function GameCreatedPage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-10">
-      <div className="rounded border border-good/40 bg-panel p-5">
+      <div className="anim-rise rounded-xl border border-good/40 bg-panel p-6">
         <h2 className="mb-2 text-sm font-semibold text-good">The agency is open.</h2>
         <p className="mb-1 text-sm text-dim">
           World seed <span className="num font-semibold text-fg">{parsedSeed}</span> — note it

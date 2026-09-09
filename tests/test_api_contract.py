@@ -65,9 +65,27 @@ def test_inbox_splits_decisions_from_noise(api_game):
     tick(api_game, 10)
     inbox = api_game.get("/api/game/inbox").json()
     assert set(inbox) == {"needs_decision", "recent"}
-    assert all(e["severity"] == "action" for e in inbox["needs_decision"])
     noisy = {"finance.retainer", "league.round", "scouting.narrowed"}
     assert all(e["kind"] not in noisy for e in inbox["recent"])
+
+    # needs_decision is no longer a slice of the event feed: it is derived from
+    # world state, so each item is an obligation that is still open and carries
+    # its own deadline and route.
+    for decision in inbox["needs_decision"]:
+        assert set(decision) >= {"id", "kind", "severity", "headline", "href", "actionable"}
+        assert decision["kind"] in {
+            "contract_expired",
+            "contract_expiring",
+            "agent_contract_expiring",
+            "approach",
+        }
+
+
+def test_decision_count_matches_the_header_badge(api_game):
+    tick(api_game, 25)
+    decisions = api_game.get("/api/game/decisions").json()
+    state = api_game.get("/api/game").json()
+    assert state["pending_actions"] == decisions["actionable"]
 
 
 def test_save_and_load_roundtrip(api_game):

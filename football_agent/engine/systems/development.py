@@ -99,7 +99,6 @@ def run(world: World, r: random.Random, balance: Balance) -> List[Event]:
                     week,
                     Severity.GOOD,
                     player_id=player.id,
-                    ability=player.ability,
                 )
             )
 

@@ -85,8 +85,42 @@ export type ContinueResponse = {
   notable: EventDTO[];
 };
 
+export type DecisionKind =
+  | "contract_expired"
+  | "contract_expiring"
+  | "agent_contract_expiring"
+  | "approach";
+
+/** An open obligation derived from world state — it clears when resolved. */
+export type Decision = {
+  id: string;
+  kind: DecisionKind;
+  severity: Severity;
+  headline: string;
+  detail: string;
+  player_id: number | null;
+  interest_id: number | null;
+  weeks_left: number | null;
+  actionable: boolean;
+  blocked_reason: string;
+  href: string;
+  extra: {
+    is_renewal?: boolean;
+    club_name?: string;
+    max_wage?: Money;
+    current_wage?: Money;
+    wage_delta?: Money;
+    improves_terms?: boolean;
+  } & Record<string, unknown>;
+};
+
+export type DecisionsResponse = {
+  decisions: Decision[];
+  actionable: number;
+};
+
 export type InboxResponse = {
-  needs_decision: EventDTO[];
+  needs_decision: Decision[];
   recent: EventDTO[];
 };
 

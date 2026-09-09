@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 
 import { Dialog } from "@/components/dialog";
 import { useToast } from "@/components/toaster";
+import { buttonClass, cn } from "@/components/ui";
 import {
   abandonNegotiation,
   openDeal,
@@ -116,36 +117,45 @@ export function NegotiationDialog({
 
   return (
     <Dialog open={open} onClose={close} title={title} wide>
+      {/* Contract length is chosen once, up front, before any number is named —
+          it is not part of the haggle and must not look like it is. */}
       {request?.kind === "deal" && !neg && (
         <div>
-          <p className="mb-1 text-sm text-dim">
-            Contract length for {request.clubName}
-            {request.isRenewal ? " (renewal — no fee)" : ""}:
+          <p className="t-label mb-2">
+            Contract length at {request.clubName}
+            {request.isRenewal ? " — renewal, no fee" : ""}
           </p>
-          <div className="mb-4 flex gap-2">
+          <div className="mb-4 grid grid-cols-4 gap-2">
             {[2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 onClick={() => setYears(n)}
-                className={`num rounded border px-3 py-1.5 text-sm ${
+                aria-pressed={years === n}
+                className={cn(
+                  "num rounded-md border px-3 py-2 text-sm transition-colors",
                   years === n
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-line text-dim hover:bg-panel-2"
-                }`}
+                    ? "border-accent bg-accent/15 font-semibold text-accent"
+                    : "border-line text-dim hover:bg-panel-2 hover:text-fg",
+                )}
               >
                 {n} years
               </button>
             ))}
           </div>
-          <p className="mb-4 rounded border border-warn/30 bg-warn/5 px-3 py-2 text-xs text-warn">
-            One negotiation per approach — naming a number spends it.
+          <p className="t-note mb-4">
+            Longer deals lock in his wage and your commission, but leave him stuck if he outgrows
+            the club.
+          </p>
+          <p className="mb-4 rounded-lg border border-warn/30 bg-warn/[0.06] px-3 py-2.5 text-xs text-warn">
+            This is the last step before the point of no return. You get one negotiation with this
+            club over this approach — naming a number spends it, whatever comes back.
           </p>
           <button
             onClick={startDeal}
             disabled={busy}
-            className="w-full rounded bg-accent px-4 py-2 font-semibold text-ink hover:bg-accent/90 disabled:opacity-50"
+            className={cn(buttonClass.primary, "w-full py-2")}
           >
-            {busy ? "…" : "Open talks"}
+            {busy ? "Opening…" : "Open talks"}
           </button>
         </div>
       )}

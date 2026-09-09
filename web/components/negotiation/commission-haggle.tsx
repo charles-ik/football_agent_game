@@ -10,6 +10,7 @@ import { useState, useTransition } from "react";
 import { Pct } from "@/components/money";
 import { RangeBar } from "@/components/range-bar";
 import { useToast } from "@/components/toaster";
+import { buttonClass, cn } from "@/components/ui";
 import { abandonNegotiation, acceptCounter, proposePct } from "@/lib/actions";
 import type { NegotiationDTO, PlayerDTO, ScoutingReportDTO } from "@/lib/types";
 
@@ -55,31 +56,41 @@ export function CommissionHaggle({
   return (
     <div className="space-y-4">
       {/* Opening panel: who you're talking to, your read on him, your standing. */}
-      <div className="rounded border border-line bg-panel-2 px-3 py-2 text-xs text-dim">
+      <div className="rounded-lg border border-line bg-panel-2 px-3.5 py-3">
         {player && (
-          <div className="mb-1 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span className="font-semibold text-fg">{player.name}</span>
-            <span>
+          <div className="mb-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-sm font-semibold text-fg">{player.name}</span>
+            <span className="text-xs text-dim">
               {player.age} · {player.position} · {player.trait}
             </span>
-            <span className="text-faint">your reputation: {reputation}</span>
+            <span className="num ml-auto text-xs text-faint">
+              your reputation: {reputation}
+            </span>
           </div>
         )}
         {report && (
-          <div className="flex flex-wrap items-center gap-4">
-            <RangeBar
-              low={report.ability_low}
-              high={report.ability_high}
-              confidence={report.confidence}
-            />
-            <RangeBar
-              low={report.potential_low}
-              high={report.potential_high}
-              confidence={report.confidence}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="t-label mb-1">Ability</div>
+              <RangeBar
+                low={report.ability_low}
+                high={report.ability_high}
+                confidence={report.confidence}
+              />
+            </div>
+            <div>
+              <div className="t-label mb-1">Potential</div>
+              <RangeBar
+                low={report.potential_low}
+                high={report.potential_high}
+                confidence={report.confidence}
+              />
+            </div>
           </div>
         )}
-        <p className="mt-2 text-warn">Push too hard and he walks — for weeks.</p>
+        <p className="mt-3 text-xs text-warn">
+          Push too hard and he walks — and he will not take your call again for weeks.
+        </p>
       </div>
 
       <ProposalEcho neg={neg} />
@@ -87,10 +98,12 @@ export function CommissionHaggle({
       {!terminal && (
         <>
           <div>
-            <div className="mb-1 flex items-center justify-between text-xs text-dim">
-              <span>Your cut</span>
-              <span className="num text-faint">
-                guide: {(guide.low_pct * 100).toFixed(1)}–{(guide.high_pct * 100).toFixed(1)}%
+            <div className="mb-2 flex items-center justify-between">
+              <span className="t-label">Your cut</span>
+              <span className="num text-[11px] text-faint">
+                agents of your standing command{" "}
+                {(guide.low_pct * 100).toFixed(1)}–{(guide.high_pct * 100).toFixed(1)}% — where he
+                sits in that is his business
               </span>
             </div>
             <div className="relative">
@@ -123,14 +136,14 @@ export function CommissionHaggle({
                     setPct(Math.min(bounds.max_pct, Math.max(bounds.min_pct, value)));
                   }
                 }}
-                className="num w-20 rounded border border-line bg-panel-2 px-2 py-1 text-sm outline-none focus:border-accent"
+                className="num w-20 rounded-md border border-line bg-panel-2 px-2 py-1.5 text-sm outline-none transition-colors focus:border-accent"
                 aria-label="Commission percentage value"
               />
               <span className="text-xs text-faint">%</span>
               <button
                 onClick={() => run(() => proposePct(neg.id, pct))}
                 disabled={pending}
-                className="ml-auto rounded bg-accent px-4 py-1.5 text-sm font-semibold text-ink hover:bg-accent/90 disabled:opacity-50"
+                className={cn(buttonClass.primary, "ml-auto")}
               >
                 Propose <Pct value={pct} />
               </button>
@@ -138,28 +151,37 @@ export function CommissionHaggle({
           </div>
 
           {counter !== null && (
-            <div className="flex flex-wrap items-center gap-2 rounded border border-line bg-panel-2 px-3 py-2">
-              <span className="text-sm text-dim">
-                {finalRound ? "Final offer: " : "He counters with "}
-                <Pct value={counter} className="font-semibold text-fg" />
-              </span>
-              <div className="ml-auto flex gap-2">
-                <button
-                  onClick={() => run(() => acceptCounter(neg.id))}
-                  disabled={pending}
-                  className="rounded bg-accent px-3 py-1.5 text-sm font-semibold text-ink hover:bg-accent/90 disabled:opacity-50"
-                >
-                  Accept his {(counter * 100).toFixed(1)}%
-                </button>
+            <div
+              className={cn(
+                "anim-slide-in flex flex-wrap items-center gap-3 rounded-lg border px-3.5 py-3",
+                finalRound ? "border-warn/40 bg-warn/[0.06]" : "border-line bg-panel-2",
+              )}
+            >
+              <div>
+                <div className={cn("t-label", finalRound && "text-warn")}>
+                  {finalRound ? "His final offer" : "He counters"}
+                </div>
+                <Pct value={counter} className="mt-0.5 block text-lg font-semibold text-fg" />
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                {/* Push again is deliberately secondary: it is the option that
+                    can end the conversation with nothing. */}
                 {!finalRound && (
                   <button
                     onClick={() => run(() => proposePct(neg.id, pct))}
                     disabled={pending}
-                    className="rounded border border-line px-3 py-1.5 text-sm text-dim hover:bg-panel disabled:opacity-50"
+                    className={buttonClass.ghost}
                   >
                     Push again
                   </button>
                 )}
+                <button
+                  onClick={() => run(() => acceptCounter(neg.id))}
+                  disabled={pending}
+                  className={buttonClass.primary}
+                >
+                  Take his {(counter * 100).toFixed(1)}%
+                </button>
               </div>
             </div>
           )}
