@@ -349,7 +349,12 @@ export type NegotiationDTO = {
   result?: ActionResultDTO;
 };
 
-export type AssessResponse = { trust_delta: number; verdict: string };
+export type AssessResponse = {
+  trust_delta: number;
+  verdict: string;
+  current_wage: Money | null;
+  wage_delta: Money | null;
+};
 
 // Opening a negotiation can be legitimately refused — a value, not an error.
 export type OpenNegotiationResponse = NegotiationDTO | ActionResultDTO;

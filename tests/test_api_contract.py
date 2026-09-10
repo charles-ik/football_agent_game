@@ -304,6 +304,47 @@ def test_walking_away_spends_the_approach(api_game):
     assert "walked out" in refused["message"]
 
 
+def test_deal_assessment_reports_current_wage_and_signed_delta(api_game):
+    from api.session import store
+
+    client_id = api_game.get("/api/clients").json()[0]["player"]["id"]
+    api_game.post(f"/api/clients/{client_id}/seek", json={"promise": False})
+
+    opened = None
+    for _ in range(160):
+        tick(api_game, 1)
+        detail = api_game.get(f"/api/clients/{client_id}").json()
+        if detail["player"]["contract"] is None:
+            continue
+        interest = next(
+            (item for item in detail["interests"] if item["can_negotiate"]["ok"]), None
+        )
+        if interest is not None:
+            opened = api_game.post(
+                "/api/negotiations/deal", json={"interest_id": interest["id"], "years": 3}
+            ).json()
+            break
+    assert opened is not None, "no negotiable interest for a contracted client in 160 weeks"
+
+    current = opened["context"]["player"]["contract"]["wage"]
+    assessed = api_game.post(
+        f"/api/negotiations/{opened['id']}/assess", json={"wage": current["amount"] + 1000}
+    ).json()
+    assert assessed["current_wage"] == current
+    assert assessed["wage_delta"] == {"amount": 1000.0, "text": "+£1.0k"}
+
+    session = store.get(api_game.cookies.get("fa_session"))
+    assert session is not None
+    player = session.world.players[client_id]
+    player.contract = None
+    player.club_id = None
+    free_agent_assessment = api_game.post(
+        f"/api/negotiations/{opened['id']}/assess", json={"wage": 5000}
+    ).json()
+    assert free_agent_assessment["current_wage"] is None
+    assert free_agent_assessment["wage_delta"] is None
+
+
 def test_continue_evicts_open_negotiations(api_game):
     player_id = _approachable(api_game)["player"]["id"]
     opened = api_game.post("/api/negotiations/signing", json={"player_id": player_id}).json()

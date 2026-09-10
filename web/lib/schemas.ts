@@ -368,6 +368,11 @@ export const negotiationSchema = z.object({
 
 export const openNegotiationSchema = z.union([negotiationSchema, actionResultSchema]);
 
-export const assessSchema = z.object({ trust_delta: z.number(), verdict: z.string() });
+export const assessSchema = z.object({
+  trust_delta: z.number(),
+  verdict: z.string(),
+  current_wage: moneySchema.nullable(),
+  wage_delta: moneySchema.nullable(),
+});
 
 export const newGameSchema = z.object({ state: gameStateSchema, seed: z.number() });

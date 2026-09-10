@@ -19,6 +19,7 @@ import {
 } from "@/lib/actions";
 import type { AssessResponse, Money as MoneyValue, NegotiationDTO } from "@/lib/types";
 
+import { NegotiationSlider } from "./negotiation-slider";
 import { NegotiationOutcome, ProposalEcho, RoundPips, WalkAwayButton, isTerminal } from "./shared";
 
 type PackageGuide = { low_wage: MoneyValue; high_wage: MoneyValue; low_fee: MoneyValue; high_fee: MoneyValue };
@@ -40,12 +41,17 @@ export function PackageHaggle({
   const context = neg.context as {
     is_renewal?: boolean;
     years?: number;
-    player?: { club_id: number | null; name?: string };
+    player?: {
+      club_id: number | null;
+      name?: string;
+      contract?: { wage: MoneyValue } | null;
+    };
     club?: { name?: string; strength?: number; prestige?: number };
   };
   const isRenewal = Boolean(context.is_renewal);
   const isFreeAgent = context.player?.club_id == null;
   const feeHidden = isRenewal || isFreeAgent;
+  const currentWage = context.player?.contract?.wage ?? null;
 
   const [wage, setWage] = useState<number>(guide.low_wage.amount);
   const [fee, setFee] = useState<number>(guide.low_fee.amount);
@@ -58,13 +64,27 @@ export function PackageHaggle({
   // Assess before submitting: refresh the verdict as the wage changes.
   useEffect(() => {
     if (terminal) return;
+    let active = true;
+    setAssessment(null);
     const timer = setTimeout(() => {
       assessDeal(neg.id, wage)
-        .then(setAssessment)
-        .catch(() => setAssessment(null));
+        .then((next) => {
+          if (active) setAssessment(next);
+        })
+        .catch(() => {
+          if (active) setAssessment(null);
+        });
     }, 250);
-    return () => clearTimeout(timer);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [wage, neg.id, neg.round, terminal]);
+
+  const handleWageChange = (next: number) => {
+    setWage(next);
+    setAssessment(null);
+  };
 
   const run = (fn: () => Promise<NegotiationDTO>) =>
     startTransition(async () => {
@@ -86,7 +106,20 @@ export function PackageHaggle({
             for {context.player?.name ?? "your client"} · {context.years ?? 3} years
           </span>
         </div>
-        <dl className="grid grid-cols-3 gap-3">
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <dt className="t-label">Current wage</dt>
+            <dd className="mt-0.5 text-sm">
+              {currentWage ? (
+                <>
+                  <Money value={currentWage} className="text-fg" />
+                  <span className="text-faint">/wk</span>
+                </>
+              ) : (
+                <span className="text-faint">No current wage</span>
+              )}
+            </dd>
+          </div>
           <div>
             <dt className="t-label">Wage ceiling</dt>
             <dd className="mt-0.5 text-sm">
@@ -125,10 +158,12 @@ export function PackageHaggle({
             <PackageInput
               label="Wage / week"
               value={wage}
-              onChange={setWage}
+              onChange={handleWageChange}
               ceiling={bounds.max_wage.amount}
               guideLow={guide.low_wage.amount}
               guideHigh={guide.high_wage.amount}
+              currentWage={currentWage}
+              wageDelta={assessment?.wage_delta ?? null}
             />
             {!feeHidden && (
               <PackageInput
@@ -252,6 +287,8 @@ function PackageInput({
   guideLow,
   guideHigh,
   floor = 0,
+  currentWage,
+  wageDelta,
 }: {
   label: string;
   value: number;
@@ -260,12 +297,10 @@ function PackageInput({
   guideLow: number;
   guideHigh: number;
   floor?: number;
+  currentWage?: MoneyValue | null;
+  wageDelta?: MoneyValue | null;
 }) {
-  const max = Math.max(ceiling, 1);
-  const marker = Math.max(0, Math.min(100, (value / max) * 100));
-  const bandLeft = Math.max(0, Math.min(100, (guideLow / max) * 100));
-  const bandWidth = Math.max(0, Math.min(100 - bandLeft, ((guideHigh - guideLow) / max) * 100));
-  const floorAt = floor > 0 ? Math.max(0, Math.min(100, (floor / max) * 100)) : null;
+  const step = label.startsWith("Wage") ? 10 : 1000;
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
@@ -275,11 +310,21 @@ function PackageInput({
           {(ceiling / 1000).toFixed(0)}k
         </span>
       </div>
+      {currentWage !== undefined && (
+        <p className="mb-1 text-[17px] text-faint">
+          current <Money value={currentWage} /> · offer delta{" "}
+          {currentWage ? (
+            <Money value={wageDelta} signed />
+          ) : (
+            <span>No current wage</span>
+          )}
+        </p>
+      )}
       <div className="flex items-center gap-3">
         <input
           type="number"
           min={0}
-          step={label.startsWith("Wage") ? 10 : 1000}
+          step={step}
           value={Math.round(value)}
           onChange={(event) => {
             const next = Number(event.target.value);
@@ -288,23 +333,18 @@ function PackageInput({
           className="num w-28 rounded-md border border-line bg-panel-2 px-2 py-1.5 text-sm outline-none transition-colors focus:border-accent"
           aria-label={label}
         />
-        <div className="relative h-2 flex-1 rounded-full border border-line/70 bg-panel-2">
-          <div
-            className="absolute h-full rounded-full bg-accent/25"
-            style={{ left: `${bandLeft}%`, width: `${bandWidth}%` }}
-          />
-          {floorAt !== null && (
-            <div
-              className="absolute h-full w-0.5 bg-warn"
-              style={{ left: `${floorAt}%` }}
-              title="Asking price — below this the selling club says no"
-            />
-          )}
-          <div
-            className="absolute -top-0.5 h-3 w-0.5 rounded-full bg-fg transition-[left] duration-150"
-            style={{ left: `${marker}%` }}
-          />
-        </div>
+        <NegotiationSlider
+          ariaLabel={label}
+          value={value}
+          min={0}
+          max={Math.max(0, ceiling)}
+          step={step}
+          guideLow={guideLow}
+          guideHigh={guideHigh}
+          onChange={onChange}
+          markers={floor > 0 ? [{ value: floor, label: "Asking price — below this the selling club says no" }] : undefined}
+          className="flex-1"
+        />
       </div>
     </div>
   );

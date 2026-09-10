@@ -107,6 +107,40 @@ test("the decision rail clears a resolved career conversation", async ({ page, r
   expect(after.decisions.some(d=>d.id===decision.id)).toBeFalsy();
 });
 
+test("an open career conversation survives skip and closes review on selection", async ({ page, request }) => {
+  await page.setViewportSize({width:360,height:800});
+  await page.goto("/new-game");
+  await page.getByLabel("Agency name").fill("Review Agency");
+  await page.getByLabel("Seed (optional)").fill("42");
+  await page.getByRole("button", {name:"Start a new agency"}).click();
+  await page.getByRole("link", {name:"Start week 1"}).click();
+
+  const session = (await page.context().cookies()).find((cookie) => cookie.name === "fa_session");
+  const headers = {cookie:`fa_session=${session.value}`};
+  let decision;
+  for (let n=0;n<15&&!decision;n++) {
+    await request.post("http://127.0.0.1:8100/api/game/continue", {headers});
+    const inbox = await (await request.get("http://127.0.0.1:8100/api/game/decisions", {headers})).json();
+    decision = inbox.decisions.find((item) => item.kind === "career.story");
+  }
+  expect(decision).toBeTruthy();
+
+  await page.goto("/careers");
+  const reviewButton = page.locator('button[aria-label^="Review "]:visible');
+  await expect(reviewButton).toHaveCount(1);
+  await reviewButton.click();
+  const dialog = page.getByRole("dialog", {name:"This week · your decisions"});
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", {name:"Skip these and advance to next event"}).click();
+  await expect(dialog.locator(`[data-decision-id="${decision.id}"]`)).toBeVisible();
+  const afterSkip = await (await request.get("http://127.0.0.1:8100/api/game/decisions", {headers})).json();
+  expect(afterSkip.decisions.some((item) => item.id === decision.id)).toBeTruthy();
+
+  await dialog.locator(`[data-decision-id="${decision.id}"]`).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("heading", {name:"Careers & commitments"})).toBeVisible();
+});
+
 test('agency expansion is usable on desktop and a narrow phone', async ({page}) => {
   await page.setViewportSize({width:1440,height:1000});
   await page.goto('/new-game');

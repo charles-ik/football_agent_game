@@ -27,7 +27,6 @@ export function ContinueButton({ pending, revision, decisions = [], variant = "f
   const press = useCallback(async (auto = false) => {
     if (advancing) return;
     advancing = true; cancel.current = false; setBusy(true); setAutomatic(auto);
-    setReview(false);
     let expected = revision;
     const skipped = new Set(decisions.map(d => d.id));
     const events: EventDTO[] = [];
@@ -80,7 +79,7 @@ export function ContinueButton({ pending, revision, decisions = [], variant = "f
       </div>
     </div>
     <Dialog open={review} onClose={() => setReview(false)} title="This week · your decisions" wide>
-      <DecisionList decisions={decisions}/>
+      <DecisionList decisions={decisions} onSelect={() => setReview(false)} />
       <div className="mt-4 flex flex-wrap gap-2">
         <button className={buttonClass.secondary} onClick={() => setReview(false)}>Keep managing</button>
         <button className={buttonClass.primary} onClick={() => void press(true)}>Skip these and advance to next event</button>

@@ -55,6 +55,14 @@ def money(amount: float) -> Dict[str, Any]:
     return {"amount": round(float(amount), 2), "text": format_money(amount)}
 
 
+def signed_money(amount: float) -> Dict[str, Any]:
+    """A preformatted signed amount for deltas shown next to a current value."""
+    value = money(amount)
+    if value["amount"] > 0:
+        value["text"] = f"+{value['text']}"
+    return value
+
+
 def event_dto(event: Event) -> Dict[str, Any]:
     return {
         "kind": event.kind,

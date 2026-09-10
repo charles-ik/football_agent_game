@@ -1,3 +1,5 @@
+"use client";
+
 // The decision list — the single most important surface in the game.
 //
 // Every item here is an *open obligation*: something the world is currently
@@ -44,9 +46,11 @@ function deadline(weeks: number | null): { text: string; tone: "bad" | "warn" | 
 export function DecisionCard({
   decision,
   compact = false,
+  onSelect,
 }: {
   decision: Decision;
   compact?: boolean;
+  onSelect?: () => void;
 }) {
   const style = SEVERITY_STYLE[decision.severity] ?? SEVERITY_STYLE.info;
   const clock = deadline(decision.weeks_left);
@@ -57,6 +61,7 @@ export function DecisionCard({
     <Link
       href={decision.href}
       data-decision-id={decision.id}
+      onClick={() => onSelect?.()}
       className={cn(
         "group block border-l-2 bg-panel px-3 py-2.5 transition-colors hover:bg-panel-2",
         style.border,
@@ -117,10 +122,12 @@ export function DecisionList({
   decisions,
   compact = false,
   emptyHint,
+  onSelect,
 }: {
   decisions: Decision[];
   compact?: boolean;
   emptyHint?: string;
+  onSelect?: (decision: Decision) => void;
 }) {
   if (decisions.length === 0) {
     return (
@@ -134,7 +141,12 @@ export function DecisionList({
   return (
     <div className="divide-y divide-line/60">
       {decisions.map((decision) => (
-        <DecisionCard key={decision.id} decision={decision} compact={compact} />
+        <DecisionCard
+          key={decision.id}
+          decision={decision}
+          compact={compact}
+          onSelect={() => onSelect?.(decision)}
+        />
       ))}
     </div>
   );

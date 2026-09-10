@@ -15,6 +15,7 @@ import { abandonNegotiation, acceptCounter, proposePct } from "@/lib/actions";
 import type { NegotiationDTO, PlayerDTO, ScoutingReportDTO } from "@/lib/types";
 
 import { NegotiationOutcome, ProposalEcho, RoundPips, WalkAwayButton, isTerminal } from "./shared";
+import { NegotiationSlider } from "./negotiation-slider";
 
 type PctGuide = { low_pct: number; high_pct: number };
 type PctBounds = { min_pct: number; max_pct: number };
@@ -50,9 +51,6 @@ export function CommissionHaggle({
         toast(error instanceof Error ? error.message : "Something broke.", "bad");
       }
     });
-
-  const bandLeft = ((guide.low_pct - bounds.min_pct) / (bounds.max_pct - bounds.min_pct)) * 100;
-  const bandWidth = ((guide.high_pct - guide.low_pct) / (bounds.max_pct - bounds.min_pct)) * 100;
 
   return (
     <div className="space-y-4">
@@ -107,23 +105,17 @@ export function CommissionHaggle({
                 sits in that is his business
               </span>
             </div>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 my-auto h-2 w-full rounded bg-panel-2" />
-              <div
-                className="pointer-events-none absolute inset-y-0 my-auto h-2 rounded bg-accent/25"
-                style={{ left: `${bandLeft}%`, width: `${bandWidth}%` }}
-              />
-              <input
-                type="range"
-                min={bounds.min_pct}
-                max={bounds.max_pct}
-                step={0.001}
-                value={pct}
-                onChange={(event) => setPct(Number(event.target.value))}
-                className="relative w-full accent-accent"
-                aria-label="Commission percentage"
-              />
-            </div>
+            <NegotiationSlider
+              ariaLabel="Commission percentage"
+              ariaValueText={`${(pct * 100).toFixed(1)}%`}
+              value={pct}
+              min={bounds.min_pct}
+              max={bounds.max_pct}
+              step={0.001}
+              guideLow={guide.low_pct}
+              guideHigh={guide.high_pct}
+              onChange={setPct}
+            />
             <div className="mt-1 flex items-center gap-2">
               <input
                 type="number"

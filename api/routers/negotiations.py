@@ -179,7 +179,14 @@ def assess_deal(
     trust_delta, verdict = actions.assess_move(
         session.world, session.balance, player, club, body.wage
     )
-    return {"trust_delta": round(trust_delta, 1), "verdict": verdict}
+    current_wage = player.contract.wage if player.contract else None
+    wage_delta = body.wage - current_wage if current_wage is not None else None
+    return {
+        "trust_delta": round(trust_delta, 1),
+        "verdict": verdict,
+        "current_wage": dto.money(current_wage) if current_wage is not None else None,
+        "wage_delta": dto.signed_money(wage_delta) if wage_delta is not None else None,
+    }
 
 
 @router.post("/{handle_id}/propose")
