@@ -28,7 +28,7 @@ export function SeasonTimeline({
     <div>
       <div className="mb-2 flex items-baseline justify-between">
         <span className="t-label">The season</span>
-        <span className="num text-[11px] text-faint">
+        <span className="num text-[17px] text-faint">
           week {seasonWeek} of {weeksPerSeason}
         </span>
       </div>
@@ -57,7 +57,7 @@ export function SeasonTimeline({
 
       <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1">
         {windows.map(([start, end]) => (
-          <span key={start} className="flex items-center gap-1.5 text-[11px] text-faint">
+          <span key={start} className="flex items-center gap-1.5 text-[17px] text-faint">
             <span aria-hidden className="h-2 w-2 rounded-sm bg-accent/40" />
             {windowNames[String(start)] ?? "Window"}
             <span className="num">

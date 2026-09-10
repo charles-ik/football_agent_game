@@ -303,9 +303,9 @@ function PackageInput({
   const step = label.startsWith("Wage") ? 10 : 1000;
   return (
     <div>
-      <div className="mb-1.5 flex items-center justify-between">
+      <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className="t-label">{label}</span>
-        <span className="num text-[11px] text-faint">
+        <span className="num text-[17px] text-faint">
           guide {(guideLow / 1000).toFixed(0)}k–{(guideHigh / 1000).toFixed(0)}k · ceiling{" "}
           {(ceiling / 1000).toFixed(0)}k
         </span>

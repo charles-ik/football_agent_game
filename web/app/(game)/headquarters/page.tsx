@@ -123,7 +123,7 @@ function LevelCard({
           <dd className="text-sm">
             <Money value={level.weekly_cost} />
             {compareTo && (
-              <span className="num ml-1.5 text-[11px] text-warn">
+              <span className="num ml-1.5 text-[17px] text-warn">
                 +{Math.round(level.weekly_cost.amount - compareTo.weekly_cost.amount)}
               </span>
             )}
@@ -159,7 +159,7 @@ function Row({
       <dd className="num text-sm">
         {value}
         {delta !== undefined && delta > 0 && (
-          <span className="ml-1.5 inline-flex items-center gap-0.5 text-[11px] text-good">
+          <span className="ml-1.5 inline-flex items-center gap-0.5 text-[17px] text-good">
             <Check size={10} aria-hidden />+{delta}
             {deltaSuffix}
           </span>

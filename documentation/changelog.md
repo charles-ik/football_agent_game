@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-09-10 — Readability and action clarity
+
+- **Changed:** the browser UI now uses a 20px root type size, six pixels larger than the previous baseline. Small fixed-size captions were raised by the same amount so navigation, tables, status rails, dialogs and supporting text scale together.
+- **Changed:** primary, secondary, quiet and destructive controls now have distinct filled surfaces, stronger borders, elevation, hover/pressed feedback and 20px labels. Button-like links and previously text-only actions use the same visual language.
+- **Validated:** production build, TypeScript, 25 component tests, and responsive browser checks at desktop, compact and 390px mobile widths.
+
 ## 2026-09-10 — Agency tycoon expansion
 
 - **Added:** illustrated office, support staff portfolios, departments, identity, specialization, seasonal objectives and milestones.

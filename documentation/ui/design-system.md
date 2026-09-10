@@ -62,13 +62,15 @@ amber and red, and reads as cold rather than neon.
 
 Two self-hosted faces via the `geist` package, so there is no runtime network
 dependency and no fallback flash. Geist Sans carries prose; Geist Mono carries
-every number.
+every number. The root type size is 20px, raised from 14px so the whole interface
+inherits a consistent six-pixel readability increase. Fixed-size microcopy is
+also lifted by six pixels instead of escaping the global scale.
 
 | Class | Role |
 | --- | --- |
 | `.t-title` | Screen title. One per route. |
 | `.t-section` | Section heading inside a screen. |
-| `.t-label` | 11px uppercase eyebrow — column headers, panel labels, stat captions. |
+| `.t-label` | 16px uppercase eyebrow — column headers, panel labels, stat captions. |
 | `.t-note` | Supporting prose: hints, reasons, consequences. |
 | `.num` | Any figure you compare. Mono, tabular, slightly tightened. |
 
@@ -95,6 +97,13 @@ From `web/components/ui.tsx`:
   bare "nothing here" leaves a new player stuck on a black screen with no next
   move.
 - **`Skeleton`**, **`inputClass`**, **`buttonClass`**.
+
+`buttonClass` defines four intentionally distinct action levels. Primary actions
+use the solid agency accent; secondary actions use an accent-tinted raised
+surface; ghost actions retain a visible neutral surface; destructive actions use
+a red-tinted surface. All four use 20px labels, generous hit areas, and matching
+hover, pressed, focus and disabled feedback. This keeps actions such as Hire,
+Assign, Dismiss and Continue recognisable without relying on wording alone.
 
 ## Signature components
 

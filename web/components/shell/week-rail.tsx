@@ -30,7 +30,7 @@ export function WeekRail({
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
         <h2 className="t-label">Needs a decision</h2>
         {decisions.length > 0 && (
-          <span className="num rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-semibold text-accent">
+          <span className="num rounded-full bg-accent/15 px-2 py-0.5 text-[17px] font-semibold text-accent">
             {decisions.length}
           </span>
         )}

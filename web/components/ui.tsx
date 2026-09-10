@@ -167,7 +167,7 @@ export function Badge({
     <span
       title={title}
       className={cn(
-        "inline-flex items-center gap-1 whitespace-nowrap rounded border px-1.5 py-0.5 text-[11px] leading-tight",
+        "inline-flex items-center gap-1 whitespace-nowrap rounded border px-1.5 py-0.5 text-[17px] leading-tight",
         styles,
         className,
       )}
@@ -291,7 +291,7 @@ export function EmptyState({
       {action && (
         <Link
           href={action.href}
-          className="mt-4 rounded border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
+          className={cn(buttonClass.secondary, "mt-4")}
         >
           {action.label}
         </Link>
@@ -318,11 +318,11 @@ export const inputClass =
 
 export const buttonClass = {
   primary:
-    "rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40",
+    "min-h-10 rounded-lg border border-accent bg-accent px-4 py-2 text-base font-semibold text-ink shadow-[0_3px_0_0_var(--color-accent-deep),0_8px_18px_rgb(0_0_0/0.22)] transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:bg-[#e2d29a] hover:shadow-[0_4px_0_0_var(--color-accent-deep),0_10px_22px_rgb(0_0_0/0.3)] active:translate-y-0 active:shadow-[0_1px_0_0_var(--color-accent-deep)] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
   secondary:
-    "rounded-md border border-line bg-panel-2 px-3 py-1.5 text-sm text-fg transition-colors hover:bg-panel-3 disabled:cursor-not-allowed disabled:opacity-40",
+    "min-h-10 rounded-lg border border-accent/65 bg-accent/15 px-4 py-2 text-base font-semibold text-accent shadow-[0_2px_0_0_rgb(0_0_0/0.35),0_6px_14px_rgb(0_0_0/0.16)] transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:border-accent hover:bg-accent/25 hover:text-fg active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
   ghost:
-    "rounded-md px-2.5 py-1.5 text-sm text-dim transition-colors hover:bg-panel-2 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40",
+    "min-h-10 rounded-lg border border-line-strong bg-panel-2/75 px-3 py-2 text-base font-medium text-dim shadow-[0_2px_0_0_rgb(0_0_0/0.25)] transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:border-accent/60 hover:bg-panel-3 hover:text-fg active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
   danger:
-    "rounded-md border border-bad/50 px-3 py-1.5 text-sm text-bad transition-colors hover:bg-bad/10 disabled:cursor-not-allowed disabled:opacity-40",
+    "min-h-10 rounded-lg border border-bad/70 bg-bad/10 px-4 py-2 text-base font-semibold text-bad shadow-[0_2px_0_0_rgb(0_0_0/0.3)] transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:border-bad hover:bg-bad/20 hover:text-fg active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
 };

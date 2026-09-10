@@ -211,7 +211,7 @@ export function ScoutManager({
                       <div className="flex justify-end gap-1.5">
                         <button
                           onClick={() => setAssigning(scout)}
-                          className={cn(buttonClass.secondary, "px-2 py-1 text-xs")}
+                          className={cn(buttonClass.secondary, "px-2 py-1")}
                         >
                           Assign
                         </button>
@@ -219,14 +219,14 @@ export function ScoutManager({
                           onClick={() => setFocusing(scout)}
                           disabled={!scout.region_id}
                           title={scout.region_id ? "" : "Assign him to a region first"}
-                          className={cn(buttonClass.secondary, "px-2 py-1 text-xs")}
+                          className={cn(buttonClass.secondary, "px-2 py-1")}
                         >
                           Focus
                         </button>
                         <ActionButton
                           action={revision => dismissScout(scout.id, revision)}
                           confirm={`Let ${scout.name} go? You stop paying him this week, and you lose whatever he was building up in his region.`}
-                          className="px-2 py-1 text-xs"
+                          className="px-2 py-1"
                         >
                           Dismiss
                         </ActionButton>
@@ -356,7 +356,7 @@ function AssignDialog({
               } catch (err) {setError(err instanceof Error ? err.message : "Could not unassign scout."); router.refresh();}
               finally {setBusy(false);}
             }}
-            className="text-xs text-faint underline-offset-2 transition-colors hover:text-bad hover:underline"
+            className={buttonClass.danger}
           >
             Pull him off everything
           </button>
@@ -415,7 +415,7 @@ function FocusDialog({
             key={row.player.id}
             disabled={busy}
             onClick={() => pick(row.player.id)}
-            className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-panel-2"
+            className={cn(buttonClass.ghost, "flex w-full items-center justify-between gap-3 text-left")}
           >
             <span className="min-w-0 flex-1 truncate">
               {row.player.name}{" "}
@@ -475,7 +475,7 @@ function HireDialog({
                 fee <Money value={candidate.signing_fee} />
               </div>
             </div>
-            <ActionButton action={revision => hireScout(candidate.index, revision)} kind="primary" className="text-xs">
+            <ActionButton action={revision => hireScout(candidate.index, revision)} kind="primary">
               Hire
             </ActionButton>
           </div>
@@ -523,7 +523,7 @@ export function ReportsTable({ reports, shortlisted = [] }: { reports: ScoutingR
     <button
       onClick={() => toggle(key)}
       className={cn(
-        "inline-flex items-center gap-1 transition-colors hover:text-fg",
+        "inline-flex items-center gap-1 rounded border border-transparent px-1.5 py-1 text-accent transition-colors hover:border-accent/50 hover:bg-accent/10 hover:text-fg",
         sort.key === key && "text-fg",
       )}
     >
@@ -596,12 +596,12 @@ export function ReportsTable({ reports, shortlisted = [] }: { reports: ScoutingR
                 {row.can_approach ? (
                   <button
                     onClick={() => setRequest({ kind: "signing", playerId: row.player.id })}
-                    className={cn(buttonClass.primary, "px-2.5 py-1 text-xs")}
+                    className={cn(buttonClass.primary, "px-2.5 py-1")}
                   >
                     Approach
                   </button>
                 ) : (
-                  <span className="block max-w-56 text-right text-[11px] leading-tight text-faint">
+                  <span className="block max-w-56 text-right text-[17px] leading-tight text-faint">
                     {row.approach_blocked_reason}
                   </span>
                 )}

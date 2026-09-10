@@ -84,7 +84,7 @@ export function HeaderBar({
               <span className="mr-1 text-faint">{item.key}</span>
               {item.label}
               {count > 0 && (
-                <span className="rounded-full bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
+                <span className="rounded-full bg-accent/20 px-1.5 py-0.5 text-[16px] font-semibold text-accent">
                   {count}
                 </span>
               )}

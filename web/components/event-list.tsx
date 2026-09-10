@@ -91,11 +91,11 @@ export function EventRow({
       >
         {SEVERITY_ICON[event.severity]}
       </span>
-      {showWeek && <span className="num w-9 shrink-0 text-[11px] text-faint">w{event.week}</span>}
-      <span className={cn("text-[13px] leading-snug", `sev-${event.severity}`)}>
+      {showWeek && <span className="num w-9 shrink-0 text-[17px] text-faint">w{event.week}</span>}
+      <span className={cn("text-[19px] leading-snug", `sev-${event.severity}`)}>
         {event.message}
         {repeats > 1 && (
-          <span className="num ml-1.5 rounded bg-panel-3 px-1 text-[10px] text-faint">
+          <span className="num ml-1.5 rounded bg-panel-3 px-1 text-[16px] text-faint">
             ×{repeats}
           </span>
         )}

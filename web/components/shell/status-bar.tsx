@@ -36,12 +36,12 @@ export function StatusBar({ state }: { state: GameState }) {
           <CalendarClock size={15} className="shrink-0 text-faint" aria-hidden />
         )}
         <div className="min-w-0 leading-tight">
-          <div className="truncate text-[13px] font-medium">
+          <div className="truncate text-[19px] font-medium">
             Season <span className="num">{calendar.season}</span>
             <span className="text-faint"> · </span>
             week <span className="num">{calendar.season_week}</span>
           </div>
-          <div className="truncate text-[11px]">
+          <div className="truncate text-[17px]">
             {calendar.window_open ? (
               <span className="text-accent">
                 {calendar.window_name} open
@@ -82,7 +82,7 @@ export function StatusBar({ state }: { state: GameState }) {
         <Metric label="Reputation" className="hidden sm:flex">
           <span className="text-sm">
             <span className="num font-semibold">{agency.reputation}</span>{" "}
-            <span className="text-[11px] text-faint">{agency.reputation_label}</span>
+            <span className="text-[17px] text-faint">{agency.reputation_label}</span>
           </span>
         </Metric>
 

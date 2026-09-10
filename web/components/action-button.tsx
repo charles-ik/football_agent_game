@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useGameRevision } from "@/components/game-revision";
 import { Dialog } from "@/components/dialog";
 import { useToast } from "@/components/toaster";
+import { buttonClass, cn } from "@/components/ui";
 import type { ActionResultDTO } from "@/lib/types";
 
 export function ActionButton({
@@ -60,19 +61,14 @@ export function ActionButton({
     run();
   };
 
-  const styles =
-    kind === "primary"
-      ? "bg-accent text-ink hover:bg-accent/90 font-semibold"
-      : kind === "danger"
-        ? "border border-bad/50 text-bad hover:bg-bad/10"
-        : "border border-line text-fg hover:bg-panel-2";
+  const styles = kind === "primary" ? buttonClass.primary : kind === "danger" ? buttonClass.danger : buttonClass.secondary;
 
   return (
     <>
       <button
         onClick={fire}
         disabled={pending || disabled}
-        className={`rounded px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${styles} ${className}`}
+        className={cn(styles, className)}
       >
         {pending ? "…" : children}
       </button>
@@ -82,7 +78,7 @@ export function ActionButton({
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setConfirming(false)}
-              className="rounded border border-line px-3 py-1.5 text-sm text-fg hover:bg-panel-2"
+              className={buttonClass.secondary}
             >
               Cancel
             </button>
@@ -91,11 +87,7 @@ export function ActionButton({
                 setConfirming(false);
                 run();
               }}
-              className={`rounded px-3 py-1.5 text-sm font-semibold ${
-                kind === "danger"
-                  ? "border border-bad/50 text-bad hover:bg-bad/10"
-                  : "bg-accent text-ink hover:bg-accent/90"
-              }`}
+              className={kind === "danger" ? buttonClass.danger : buttonClass.primary}
             >
               Confirm
             </button>

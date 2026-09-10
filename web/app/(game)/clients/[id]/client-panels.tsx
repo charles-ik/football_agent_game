@@ -105,7 +105,7 @@ export function InterestCards({
                   <span className="flex items-baseline gap-1.5">
                     <Money value={interest.max_wage} className="text-fg" />
                     {currentWage > 0 && (
-                      <span className={cn("num text-[11px]", improves ? "text-good" : "text-faint")}>
+                      <span className={cn("num text-[17px]", improves ? "text-good" : "text-faint")}>
                         {delta >= 0 ? "▲" : "▼"} on his {detail.wage?.text}
                       </span>
                     )}
@@ -118,7 +118,7 @@ export function InterestCards({
                 )}
               </dl>
 
-              <p className="mb-3 flex items-start gap-1.5 rounded-md border border-warn/25 bg-warn/[0.06] px-2 py-1.5 text-[11px] leading-snug text-warn">
+              <p className="mb-3 flex items-start gap-1.5 rounded-md border border-warn/25 bg-warn/[0.06] px-2 py-1.5 text-[17px] leading-snug text-warn">
                 <AlertTriangle size={12} className="mt-px shrink-0" aria-hidden />
                 One negotiation per approach. Naming a number spends it, and a walk-away cannot be
                 re-rolled.

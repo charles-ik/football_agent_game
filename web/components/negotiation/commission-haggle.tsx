@@ -99,7 +99,7 @@ export function CommissionHaggle({
           <div>
             <div className="mb-2 flex items-center justify-between">
               <span className="t-label">Your cut</span>
-              <span className="num text-[11px] text-faint">
+              <span className="num text-[17px] text-faint">
                 agents of your standing command{" "}
                 {(guide.low_pct * 100).toFixed(1)}–{(guide.high_pct * 100).toFixed(1)}% — where he
                 sits in that is his business

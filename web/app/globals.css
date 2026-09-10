@@ -56,7 +56,10 @@ body {
   background: var(--color-ink);
   color: var(--color-fg);
   font-family: var(--font-sans);
-  font-size: 14px;
+  /* The interface is deliberately text-forward. A 20px root keeps all of the
+     rem-based Tailwind utilities readable and raises the previous 14px scale
+     by the requested six pixels across every route. */
+  font-size: 20px;
   line-height: 1.5;
 }
 
@@ -106,7 +109,7 @@ body {
 
 /* The uppercase eyebrow used for column headers and panel labels. */
 .t-label {
-  font-size: 0.6875rem;
+  font-size: 0.8rem;
   line-height: 1.2;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -116,7 +119,7 @@ body {
 
 /* Supporting prose: hints, reasons, consequences. */
 .t-note {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   line-height: 1.45;
   color: var(--color-faint);
 }
@@ -235,6 +238,7 @@ body {
 /* Form controls inherit the console's surfaces rather than the OS's. */
 @layer base {
   input, select, textarea, button { font: inherit; color: inherit; }
+  button:not(:disabled) { cursor: pointer; }
 }
 
 select option {

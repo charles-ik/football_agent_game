@@ -73,7 +73,7 @@ export function RangeBar({
         />
       </div>
       {showLabel && (
-        <div className="mt-1 flex items-baseline justify-between gap-2 text-[11px] leading-tight">
+        <div className="mt-1 flex items-baseline justify-between gap-2 text-[17px] leading-tight">
           <span className="num text-fg">
             {Math.round(low)}–{Math.round(high)}
           </span>

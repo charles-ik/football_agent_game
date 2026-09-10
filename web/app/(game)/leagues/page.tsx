@@ -75,7 +75,7 @@ export default async function LeaguesPage() {
                             {row.club_name}
                           </span>
                           {yours && (
-                            <span className="truncate text-[11px] text-accent/80">
+                            <span className="truncate text-[17px] text-accent/80">
                               {yours.join(", ")}
                             </span>
                           )}

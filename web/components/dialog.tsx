@@ -7,6 +7,7 @@
 // for a modal flow that otherwise strands keyboard and screen-reader users.
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { buttonClass } from "@/components/ui";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -88,7 +89,7 @@ export function Dialog({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md px-2 py-1 text-dim transition-colors hover:bg-panel-2 hover:text-fg"
+            className={buttonClass.ghost}
           >
             ✕
           </button>

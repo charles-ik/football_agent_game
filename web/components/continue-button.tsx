@@ -72,10 +72,10 @@ export function ContinueButton({ pending, revision, decisions = [], variant = "f
         </button>
       </div>
       <div className="mt-2 flex items-center justify-between gap-2">
-        {automatic ? <button className="text-sm text-warn" onClick={() => {cancel.current = true; setStatus("Stopping after this week…");}}>Stop advancing</button> :
-          <button disabled={busy} onClick={() => pending > 0 ? setReview(true) : void press(true)} className="flex items-center gap-1 text-xs text-dim hover:text-fg"><FastForward size={13}/>To next event</button>}
+        {automatic ? <button className={buttonClass.danger} onClick={() => {cancel.current = true; setStatus("Stopping after this week…");}}>Stop advancing</button> :
+          <button disabled={busy} onClick={() => pending > 0 ? setReview(true) : void press(true)} className={cn(buttonClass.ghost, "flex items-center gap-1")}><FastForward size={13}/>To next event</button>}
         <span role="status" className="text-xs text-faint">{status || "One turn · one week"}</span>
-        {summary.length > 0 && <button onClick={() => setStatus(status === "briefing" ? "" : "briefing")} className="text-xs text-accent">Briefing</button>}
+        {summary.length > 0 && <button onClick={() => setStatus(status === "briefing" ? "" : "briefing")} className={buttonClass.secondary}>Briefing</button>}
       </div>
     </div>
     <Dialog open={review} onClose={() => setReview(false)} title="This week · your decisions" wide>

@@ -88,7 +88,7 @@ export function ClientsTable({ clients }: { clients: ClientRow[] }) {
           <li key={row.player.id}>
             <button
               onClick={() => router.push(`/clients/${row.player.id}`)}
-              className="w-full px-3.5 py-3 text-left transition-colors hover:bg-panel-2"
+              className="w-full rounded-lg border border-transparent bg-panel/40 px-3.5 py-3 text-left transition-[background-color,border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-accent/60 hover:bg-accent/10 hover:shadow-lg"
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="truncate font-medium">{row.player.name}</span>
@@ -159,7 +159,7 @@ export function ClientsTable({ clients }: { clients: ClientRow[] }) {
                 <button
                   onClick={() => toggle(column.key!)}
                   className={cn(
-                    "inline-flex items-center gap-1 transition-colors hover:text-fg",
+                    "inline-flex items-center gap-1 rounded border border-transparent px-1.5 py-1 text-accent transition-colors hover:border-accent/50 hover:bg-accent/10 hover:text-fg",
                     sort?.key === column.key && "text-fg",
                   )}
                 >

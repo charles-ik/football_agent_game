@@ -136,7 +136,7 @@ export function WalkAwayButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="text-xs text-faint underline-offset-2 transition-colors hover:text-bad hover:underline disabled:opacity-50"
+      className={buttonClass.danger}
     >
       Walk away
     </button>

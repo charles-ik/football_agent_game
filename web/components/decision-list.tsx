@@ -73,7 +73,7 @@ export function DecisionCard({
         {clock && (
           <span
             className={cn(
-              "num shrink-0 text-[11px]",
+              "num shrink-0 text-[17px]",
               clock.tone === "bad"
                 ? "text-bad"
                 : clock.tone === "warn"

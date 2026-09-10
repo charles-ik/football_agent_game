@@ -127,7 +127,7 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
             <button
               type="button"
               onClick={() => setManualEntry((v) => !v)}
-              className="text-xs text-faint underline-offset-2 hover:text-fg hover:underline"
+              className={buttonClass.ghost}
             >
               {manualEntry ? "Pick from list" : "Type a slot name"}
             </button>

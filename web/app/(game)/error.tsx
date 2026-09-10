@@ -7,6 +7,7 @@
 // error boundary.
 
 import { useEffect } from "react";
+import { buttonClass } from "@/components/ui";
 
 export default function GameError({
   error,
@@ -27,7 +28,7 @@ export default function GameError({
       </p>
       <button
         onClick={reset}
-        className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-accent/90"
+        className={buttonClass.primary}
       >
         Refresh
       </button>
