@@ -1,5 +1,7 @@
 # The app shell
 
+Updated 2026-09-10: `/` is the illustrated office; the prior dashboard lives at `/overview`. Agency, Careers, Market and World join the existing routes. Phone navigation uses Office, Clients, Market and More; every viewport has access to the same decisions drawer. Continue supports bounded event advancement with a shared synchronous guard. The original shell design below is retained as historical context; see [agency expansion](../features/agency-expansion.md).
+
 Defined in `web/app/(game)/layout.tsx`. Three zones, present on every screen in
 the game.
 

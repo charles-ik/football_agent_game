@@ -18,7 +18,7 @@ from rich.text import Text
 
 from football_agent.engine import actions as A
 from football_agent.engine import calendar as cal
-from football_agent.engine import persistence
+from football_agent.engine import persistence, agency_management, careers, market
 from football_agent.engine.balance import Balance, load_balance
 from football_agent.engine.economy import format_money, market_value
 from football_agent.engine.events import Event, Severity
@@ -43,7 +43,7 @@ class Game:
         self.world = world
         self.balance = balance
         self.save_path = save_path
-        self.inbox: List[Event] = []
+        self.inbox: List[Event] = list(world.recent_events)
 
     # ---- plumbing ------------------------------------------------------
     @property
@@ -65,6 +65,10 @@ class Game:
         if result.message:
             console.print(Text(result.message, style=style))
         self.push(result.events)
+        careers.initialize(self.world, self.balance)
+        for event in result.events:
+            careers.record_event(self.world, event)
+        self.world.recent_events = self.inbox[-INBOX_LIMIT:]
 
     # ---- main loop -----------------------------------------------------
     def run(self) -> None:
@@ -81,6 +85,7 @@ class Game:
             console.print(
                 "[bold]1[/bold] Inbox  [bold]2[/bold] Clients  [bold]3[/bold] Scouting  "
                 "[bold]4[/bold] Headquarters  [bold]5[/bold] Finances  [bold]6[/bold] Clubs  "
+                "[bold]A[/bold] Agency  [bold]R[/bold] Careers  [bold]M[/bold] Market  "
                 "[bold green]C[/bold green] Continue  [bold]S[/bold] Save  [bold]Q[/bold] Quit"
             )
             choice = Prompt.ask("Choose", default="C").strip().lower()
@@ -97,6 +102,12 @@ class Game:
                 self.screen_finances()
             elif choice == "6":
                 self.screen_clubs()
+            elif choice == "a":
+                self.screen_agency()
+            elif choice == "r":
+                self.screen_careers()
+            elif choice == "m":
+                self.screen_market()
             elif choice == "c":
                 self.do_continue()
             elif choice == "s":
@@ -552,6 +563,125 @@ class Game:
         if index is None or not 1 <= index <= len(rows):
             return
         self.negotiate_signing(rows[index - 1][1].id)
+
+    def expansion_action(self, area: str, operation: str, payload: dict) -> A.ActionResult:
+        """The CLI dispatches the same validated engine actions as the web API."""
+        module = {"management": agency_management, "careers": careers, "market": market}[area]
+        result = module.action(self.world, self.balance, operation, payload)
+        self.report(result)
+        if result.ok:
+            self.world.revision += 1
+            self.autosave()
+        return result
+
+    def screen_agency(self) -> None:
+        while True:
+            data = agency_management.state(self.world, self.balance)
+            console.print(Panel(f"Support {len(data['staff'])}/{data['support_slots']} slots · "
+                f"{format_money(data['support_weekly_cost'])}/week · {data['specialization']}\n"
+                f"Season objective: {data['objective']['id']} {data['objective']['progress']}/{data['objective']['target']}", title="Agency"))
+            for staff in data['staff']:
+                console.print(f"Staff ID {staff['id']}: {staff['name']} ({staff['role']}) · "
+                    f"{format_money(staff['wage'])}/week · capacity {staff['capacity']} · "
+                    f"clients {staff['player_ids']} clubs {staff['club_ids']}")
+            for candidate in data['candidates']:
+                console.print(f"Candidate ID {candidate['id']}: {candidate['name']} ({candidate['role']}) · "
+                    f"quality {candidate['quality']} · hire {format_money(candidate['hire_cost'])} · {format_money(candidate['wage'])}/week")
+            for dept in data['departments']:
+                console.print(f"{dept['id']} level {dept['level']}: upgrade {format_money(dept['upgrade_cost'])}, "
+                    f"upkeep {format_money(dept['weekly_cost'])}/week")
+            operation = Prompt.ask("Agency action", choices=["hire", "fire", "assign", "upgrade_department", "downgrade_department", "specialization", "objective", "identity", "downsize", "back"], default="back")
+            if operation == "back":
+                return
+            payload = {}
+            if operation == "hire":
+                payload["candidate_id"] = IntPrompt.ask("Candidate ID")
+            elif operation in ("fire", "assign"):
+                sid = IntPrompt.ask("Staff ID")
+                payload["staff_id"] = sid
+                if operation == "assign":
+                    staff = next((s for s in data['staff'] if s['id'] == sid), None)
+                    if staff is None:
+                        console.print("Unknown staff ID.")
+                        continue
+                    field = 'player_ids' if staff['role'] == 'client_manager' else 'club_ids'
+                    entries = self.world.client_players() if field == 'player_ids' else self.world.clubs.values()
+                    for entry in entries:
+                        console.print(f"{entry.id}: {entry.name}")
+                    raw = Prompt.ask("Comma-separated portfolio IDs (blank clears)", default="")
+                    try:
+                        payload[field] = [int(value.strip()) for value in raw.split(',') if value.strip()]
+                    except ValueError:
+                        console.print("Enter numeric IDs separated by commas.")
+                        continue
+                elif not Confirm.ask("Release this staff member and remove their support?", default=False):
+                    continue
+            elif operation in ("upgrade_department", "downgrade_department"):
+                payload["department"] = Prompt.ask("Department", choices=[d['id'] for d in data['departments']])
+            elif operation == "specialization":
+                payload["specialization"] = Prompt.ask("Focus (unlocks after first deal; later changes at season start)", choices=data['specialization_options'])
+            elif operation == "objective":
+                payload["objective"] = Prompt.ask("Season objective", choices=["growth", "stability", "careers"])
+            elif operation == "identity":
+                payload["emblem"] = Prompt.ask("Emblem", choices=data['identity']['emblems'])
+                payload["accent"] = Prompt.ask("Accent", choices=data['identity']['accents'])
+            elif not Confirm.ask("Downsize one HQ tier? All staff, clients, scouts and departments must fit. No refund.", default=False):
+                continue
+            self.expansion_action("management", operation, payload)
+
+    def screen_careers(self) -> None:
+        while True:
+            data = careers.state(self.world, self.balance)
+            stories = []
+            for client in data['clients']:
+                console.print(f"{client['name']} · trust {client['trust']}")
+                goal = client['goal']
+                if goal:
+                    console.print(f"Goal: {goal['title']} · {goal['progress']}/{goal['target']} · deadline week {goal['deadline_week']}")
+                for promise in client['promises']:
+                    console.print(f"Promised move: {promise['status']} · deadline week {promise['deadline_week']}")
+                for story in client['stories']:
+                    stories.append(story)
+                    console.print(f"{len(stories)}. {story['title']}: {story['body']}")
+            index = IntPrompt.ask("Conversation number (0 to return)", default=0)
+            if index == 0:
+                return
+            if not 1 <= index <= len(stories):
+                continue
+            story = stories[index - 1]
+            for option in story['options']:
+                console.print(f"{option['id']}: {option['label']} — {option['consequence']}")
+            option = Prompt.ask("Response", choices=[o['id'] for o in story['options']])
+            self.expansion_action("careers", "respond", {"story_id": story['id'], "option_id": option})
+
+    def screen_market(self) -> None:
+        while True:
+            data = market.state(self.world, self.balance)
+            console.print(Panel("Window open" if data['window_open'] else "Window closed", title="Club network & loans"))
+            for club in data['clubs']:
+                console.print(f"Club ID {club['id']}: {club['name']} · tier {club['tier']} · relationship {club['relationship']:.0f}")
+            for player in self.world.client_players():
+                console.print(f"Client ID {player.id}: {player.name} · {self.world.club_name(player.club_id)}")
+            for talk in data['talks']:
+                console.print(f"Talk ID {talk['id']}: player {talk['player_id']} · {talk['status']} · "
+                    f"round {talk['rounds']}/{data['loan_terms']['max_rounds']} · contribution {talk['contribution_pct']}% · fee {format_money(talk['fee'])}")
+            for loan in data['loans']:
+                if loan['active']:
+                    console.print(f"Active loan {loan['id']}: player {loan['player_id']} until week {loan['ends_week']}")
+            operation = Prompt.ask("Market action", choices=["pitch", "loan_open", "loan_propose", "loan_accept", "loan_cancel", "back"], default="back")
+            if operation == "back":
+                return
+            payload = {}
+            if operation in ("pitch", "loan_open"):
+                payload.update(player_id=IntPrompt.ask("Client ID"), club_id=IntPrompt.ask("Destination club ID"))
+                if operation == "loan_open":
+                    payload['duration'] = Prompt.ask("Duration", choices=["half_season", "season"], default="half_season")
+            else:
+                payload['talk_id'] = IntPrompt.ask("Talk ID")
+                if operation == "loan_propose":
+                    payload['contribution_pct'] = _to_float(Prompt.ask("Host wage contribution percentage", default="50"))
+                    payload['fee'] = _to_float(Prompt.ask("Loan fee", default="0"))
+            self.expansion_action("market", operation, payload)
 
     # ---- other screens ---------------------------------------------------
     def screen_headquarters(self) -> None:

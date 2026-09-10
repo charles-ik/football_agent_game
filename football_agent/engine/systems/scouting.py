@@ -47,6 +47,9 @@ def precision(world: World, balance: Balance, scout: Scout) -> float:
     rate += hq_level(balance, world.agency.hq_level).precision_bonus * balance.f(
         "scouting.narrow_hq_precision_factor"
     )
+    from ..agency_management import scouting_bonus
+    age = world.players[scout.focus_player_id].age if scout.focus_player_id in world.players else scout.brief_max_age
+    rate *= 1 + scouting_bonus(world, age)
     return min(0.6, rate)
 
 
@@ -59,6 +62,8 @@ def discovery_chance(world: World, balance: Balance, scout: Scout) -> float:
     chance += region.star_rating * balance.f("scouting.star_discovery_factor")
     if scout.focus_player_id is not None:
         chance *= 0.35  # watching one man means finding fewer others
+    from ..agency_management import scouting_bonus
+    chance *= 1 + scouting_bonus(world, scout.brief_max_age)
     return min(0.9, chance)
 
 

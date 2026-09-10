@@ -70,6 +70,9 @@ def run(world: World, r: random.Random, balance: Balance) -> List[Event]:
             if _rank(current) <= _rank(expected):
                 delta -= balance.f("trust.stagnation_penalty")
 
+        from ..agency_management import client_support
+        if delta < 0:
+            delta *= 1.0 - min(0.35, client_support(world, player_id))
         if abs(delta) > 1e-9:
             adjust(world, balance, player_id, delta)
 

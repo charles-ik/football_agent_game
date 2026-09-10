@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useGameRevision } from "@/components/game-revision";
 import { Dialog } from "@/components/dialog";
 import { useToast } from "@/components/toaster";
 import { buttonClass, cn } from "@/components/ui";
@@ -38,6 +39,7 @@ export function NegotiationDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const revision = useGameRevision();
   const { toastResult } = useToast();
   const [neg, setNeg] = useState<NegotiationDTO | null>(null);
   const [busy, setBusy] = useState(false);
@@ -58,7 +60,7 @@ export function NegotiationDialog({
     let cancelled = false;
     setBusy(true);
     const action =
-      request.kind === "signing" ? openSigning(request.playerId) : openRenewal(request.playerId);
+      request.kind === "signing" ? openSigning(request.playerId, revision) : openRenewal(request.playerId, revision);
     action
       .then((body) => {
         if (cancelled) return;
@@ -90,7 +92,7 @@ export function NegotiationDialog({
   const startDeal = () => {
     if (!request || request.kind !== "deal") return;
     setBusy(true);
-    openDeal(request.interestId, years)
+    openDeal(request.interestId, years, revision)
       .then((body) => {
         if (isRefusal(body)) {
           toastResult({ ok: false, message: body.message });
@@ -116,7 +118,7 @@ export function NegotiationDialog({
     : "Negotiation";
 
   return (
-    <Dialog open={open} onClose={close} title={title} wide>
+    <Dialog open={open} onClose={close} title={title} wide side>
       {/* Contract length is chosen once, up front, before any number is named —
           it is not part of the haggle and must not look like it is. */}
       {request?.kind === "deal" && !neg && (
@@ -164,6 +166,7 @@ export function NegotiationDialog({
         <p className="text-sm text-dim">{busy ? "Opening talks…" : "Preparing…"}</p>
       )}
 
+      {neg && <p className="t-note mb-3">Closing this panel pauses your talks. They lapse when the week advances or after 15 minutes. Use the approach again to resume; walking away ends the negotiation.</p>}
       {neg && neg.axis === "commission_pct" && (
         <CommissionHaggle neg={neg} onUpdate={setNeg} onClose={close} />
       )}

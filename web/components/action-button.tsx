@@ -6,9 +6,10 @@
 // `confirm` prop routes through a small in-voice Dialog rather than the
 // browser's native confirm() — same call sites, the game's chrome instead.
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
+import { useGameRevision } from "@/components/game-revision";
 import { Dialog } from "@/components/dialog";
 import { useToast } from "@/components/toaster";
 import type { ActionResultDTO } from "@/lib/types";
@@ -21,7 +22,7 @@ export function ActionButton({
   confirm,
   disabled = false,
 }: {
-  action: () => Promise<ActionResultDTO>;
+  action: (revision?: number) => Promise<ActionResultDTO>;
   children: ReactNode;
   kind?: "primary" | "secondary" | "danger";
   className?: string;
@@ -31,18 +32,23 @@ export function ActionButton({
 }) {
   const { toastResult, toast } = useToast();
   const router = useRouter();
+  const revision = useGameRevision();
+  const inFlight = useRef(false);
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
 
   const run = () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     startTransition(async () => {
       try {
-        const result = await action();
+        const result = await action(revision);
         toastResult(result);
         router.refresh();
       } catch (error) {
         toast(error instanceof Error ? error.message : "Something broke.", "bad");
-      }
+        router.refresh();
+      } finally { inFlight.current = false; }
     });
   };
 

@@ -36,7 +36,12 @@ def get_clients(session: Session = Depends(get_session)) -> List[Dict[str, Any]]
 @router.get("/{player_id}")
 def get_client(player_id: int, session: Session = Depends(get_session)) -> Dict[str, Any]:
     # KeyError -> 404 via the app-level handler
-    return dto.client_detail_dto(session.world, session.balance, player_id)
+    detail = dto.client_detail_dto(session.world, session.balance, player_id)
+    from ..negotiations import find_open
+    for interest in detail["interests"]:
+        if find_open(session, "deal", interest["id"]):
+            interest["can_negotiate"] = {"ok": True, "reason": "Resume existing talks"}
+    return detail
 
 
 @router.post("/{player_id}/seek")

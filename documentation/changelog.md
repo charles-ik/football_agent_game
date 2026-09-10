@@ -1,3 +1,16 @@
+# Changelog
+
+## 2026-09-10 — Agency tycoon expansion
+
+- **Added:** illustrated office, support staff portfolios, departments, identity, specialization, seasonal objectives and milestones.
+- **Added:** client goals, timed promises, contextual conversations, durable career histories and alumni.
+- **Added:** club relationships and pitches, rival warnings, safe market comparisons and persistent loan negotiations/lifecycle.
+- **Changed:** responsive navigation, global decisions, event advancement, client dossiers and prospect shortlisting.
+- **Fixed:** playing-time enum mismatches, inconsistent trust concerns, wrong HQ price, retained scout form values, stale action handling, duplicate histories and same-slot new-game sessions.
+- **Changed:** schema-v2 migration, immediate autosaves, revision guards, retry receipts and rollback on save failure.
+- **Fixed:** action-week commission and investment accounting, separate support costs, and repeated operating settlement.
+- **Validation:** see [implementation and balance notes](features/agency-expansion.md).
+
 # Changelog — the interactive UI overhaul
 
 A full pass over the web interface: visual system, app shell, every screen, and

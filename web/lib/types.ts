@@ -2,6 +2,8 @@
 // Every number the UI displays comes from the API in one of these shapes;
 // the browser holds no game rules and computes no game values.
 
+export type PlayingTime = "key" | "starter" | "rotation" | "fringe" | "reserve";
+
 export type Money = { amount: number; text: string };
 
 export type Severity = "info" | "good" | "warning" | "critical" | "action";
@@ -51,6 +53,7 @@ export type ScoutingReportDTO = {
 };
 
 export type GameState = {
+  revision: number;
   agency: {
     name: string;
     cash: Money;
@@ -80,6 +83,7 @@ export type GameState = {
 };
 
 export type ContinueResponse = {
+  open_decision_ids: string[];
   state: GameState;
   events: EventDTO[];
   notable: EventDTO[];
@@ -89,6 +93,10 @@ export type DecisionKind =
   | "contract_expired"
   | "contract_expiring"
   | "agent_contract_expiring"
+  | "career.story"
+  | "career.promise"
+  | "market.rival"
+  | "market.loan"
   | "approach";
 
 /** An open obligation derived from world state — it clears when resolved. */
@@ -136,7 +144,8 @@ export type ClientRow = {
   player: PlayerDTO;
   report: ScoutingReportDTO | null;
   club_name: string;
-  playing_time: string;
+  playing_time: PlayingTime;
+  concerns: {text: string; tone: "bad" | "warn"}[];
   wage: Money | null;
   club_contract_weeks_left: number | null;
   commission_pct: number;
@@ -230,6 +239,7 @@ export type HQLevelDTO = {
 };
 
 export type HQState = {
+  upgrade_cost: Money | null;
   current: HQLevelDTO;
   next: HQLevelDTO | null;
   can_upgrade: { ok: boolean; reason: string };
@@ -243,6 +253,8 @@ export type FinanceWeekDTO = {
   commission: Money;
   scout_wages: Money;
   hq_cost: Money;
+  support_cost: Money;
+  investments: Money;
   region_costs: Money;
   income: Money;
   expenditure: Money;
@@ -310,6 +322,7 @@ export type SaveSlot = {
 export type NegotiationStatus = "open" | "accepted" | "walked" | "exhausted" | "abandoned";
 
 export type NegotiationDTO = {
+  revision: number;
   id: string;
   kind: "signing" | "renewal" | "deal";
   subject: string;

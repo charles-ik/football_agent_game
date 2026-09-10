@@ -17,12 +17,14 @@ export function Dialog({
   title,
   children,
   wide = false,
+  side = false,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
   wide?: boolean;
+  side?: boolean;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
@@ -65,7 +67,7 @@ export function Dialog({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className={`fixed inset-0 z-40 flex bg-black/70 backdrop-blur-sm ${side ? "justify-end" : "items-center justify-center p-4"}`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -78,7 +80,7 @@ export function Dialog({
         aria-label={title}
         tabIndex={-1}
         className={`anim-rise max-h-[85vh] overflow-y-auto rounded-xl border border-line bg-panel shadow-2xl shadow-black/70 outline-none ${
-          wide ? "w-full max-w-2xl" : "w-full max-w-md"
+          side ? "h-dvh max-h-dvh w-full rounded-none sm:max-w-2xl" : wide ? "w-full max-w-2xl" : "w-full max-w-md"
         }`}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel/95 px-4 py-3 backdrop-blur">

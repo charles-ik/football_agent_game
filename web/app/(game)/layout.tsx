@@ -18,6 +18,9 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { GameRevision } from "@/components/game-revision";
+import { getManagement } from "@/lib/management-api";
+import type { CSSProperties } from "react";
 import { ContinueButton } from "@/components/continue-button";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { RefreshOnFocus } from "@/components/refresh-on-focus";
@@ -44,7 +47,8 @@ export default async function GameLayout({ children }: { children: ReactNode }) 
   }
   if (state.game_over) redirect("/game-over");
 
-  const inbox = await getInbox(60);
+  const [inbox, management] = await Promise.all([getInbox(60), getManagement()]);
+  const accentColors: Record<string,string> = {emerald:"#89c6a3",blue:"#91bce4",amber:"#d8bd77",violet:"#beabe1"};
   const decisions = inbox.needs_decision;
 
   const navCounts: Record<string, number> = {};
@@ -54,13 +58,13 @@ export default async function GameLayout({ children }: { children: ReactNode }) 
   }
 
   return (
-    <div className="flex min-h-screen">
-      <NavRail counts={navCounts} agencyName={state.agency.name} />
+    <GameRevision revision={state.revision}><div className="flex min-h-screen" style={{"--color-accent": accentColors[management.identity.accent]} as CSSProperties}>
+      <NavRail counts={navCounts} agencyName={state.agency.name} emblem={management.identity.emblem} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <StatusBar state={state} />
         <NavStrip counts={navCounts} />
-        <main className="min-w-0 flex-1 px-4 py-5 pb-24 md:px-6 xl:pb-6">
+        <main className="min-w-0 flex-1 px-4 py-5 pb-48 md:pb-28 md:px-6 xl:pb-6">
           <div className="mx-auto w-full max-w-[1400px]">{children}</div>
         </main>
       </div>
@@ -68,14 +72,15 @@ export default async function GameLayout({ children }: { children: ReactNode }) 
       <WeekRail
         decisions={decisions}
         recent={inbox.recent}
+        revision={state.revision}
         pending={state.pending_actions}
       />
 
       {/* The rail is hidden below xl, so Continue floats there instead. */}
-      <ContinueButton pending={state.pending_actions} variant="floating" />
+      <ContinueButton revision={state.revision} decisions={decisions} pending={state.pending_actions} variant="floating" />
 
       <KeyboardShortcuts />
       <RefreshOnFocus />
-    </div>
+    </div></GameRevision>
   );
 }

@@ -90,7 +90,7 @@ def decision_dto(decision: Decision) -> Dict[str, Any]:
         "weeks_left": decision.weeks_left,
         "actionable": decision.actionable,
         "blocked_reason": decision.blocked_reason,
-        "href": href,
+        "href": decision.extra.get("href", href),
         "extra": _decision_extra(decision.extra),
     }
 
@@ -204,6 +204,7 @@ def game_state_dto(session: Session) -> Dict[str, Any]:
             "scout_cap": actions.scout_cap(world, balance),
         },
         "weekly_net": money(weekly_burn(world, balance)),
+        "revision": world.revision,
         "pending_actions": sum(1 for d in decisions if d.actionable),
         "game_over": world.game_over,
         "game_over_reason": world.game_over_reason,
@@ -213,6 +214,22 @@ def game_state_dto(session: Session) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Clients
 # ---------------------------------------------------------------------------
+
+
+def client_concerns(world: World, balance: Balance, player_id: int) -> list:
+    record = world.clients[player_id]
+    player = world.players[player_id]
+    role = playing_time(balance, player, world.clubs.get(player.club_id)).value
+    out = []
+    if record.trust < 60:
+        out.append({"text": trust_system.describe(record.trust), "tone": "bad" if record.trust < 40 else "warn"})
+    if role in ("fringe", "reserve"):
+        out.append({"text": f"limited playing time ({role})", "tone": "bad"})
+    if player.injury_weeks:
+        out.append({"text": f"injured {player.injury_weeks}w", "tone": "warn"})
+    if player.transfer_listed:
+        out.append({"text": "transfer-listed", "tone": "warn"})
+    return out
 
 
 def client_row_dto(world: World, balance: Balance, player_id: int) -> Dict[str, Any]:
@@ -234,6 +251,7 @@ def client_row_dto(world: World, balance: Balance, player_id: int) -> Dict[str, 
         "agent_contract_weeks_left": agent_weeks_left,
         "trust": round(record.trust, 1),
         "trust_label": trust_system.describe(record.trust),
+        "concerns": client_concerns(world, balance, player_id),
         "flags": {
             "injured_weeks": player.injury_weeks,
             "transfer_listed": player.transfer_listed,
@@ -399,6 +417,7 @@ def hq_dto(world: World, balance: Balance) -> Dict[str, Any]:
     burn = weekly_burn(world, balance)
     projected = burn - (nxt.weekly_cost - current.weekly_cost) if nxt else None
     return {
+        "upgrade_cost": money(current.upgrade_cost) if nxt else None,
         "current": hq_level_dto(current),
         "next": hq_level_dto(nxt) if nxt else None,
         "can_upgrade": {"ok": ok, "reason": reason},
@@ -420,6 +439,8 @@ def finances_dto(world: World, balance: Balance) -> Dict[str, Any]:
             "commission": money(entry.commission),
             "scout_wages": money(entry.scout_wages),
             "hq_cost": money(entry.hq_cost),
+            "support_cost": money(entry.support_cost),
+            "investments": money(entry.investments),
             "region_costs": money(entry.region_costs),
             "income": money(entry.income),
             "expenditure": money(entry.expenditure),

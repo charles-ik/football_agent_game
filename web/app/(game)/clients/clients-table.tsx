@@ -37,10 +37,10 @@ const COLUMNS: { key: SortKey | null; label: string; align?: "right"; className?
 /** Playing time is the mechanic that makes greed punishable, so a client who
  *  isn't playing must look wrong even in a glanced-at row. */
 const ROLE_TONE: Record<string, string> = {
-  star: "text-good",
-  regular: "text-fg",
+  key: "text-good",
+  starter: "text-fg",
   rotation: "text-dim",
-  bench: "text-warn",
+  fringe: "text-warn",
   reserve: "text-bad",
 };
 

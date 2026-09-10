@@ -5,6 +5,7 @@ design and build plans; this folder records what was actually shipped.
 
 | Document | What it covers |
 | --- | --- |
+| [features/agency-expansion.md](features/agency-expansion.md) | Agency growth, careers, market/loans, persistence, UI and balance observations |
 | [ui/design-system.md](ui/design-system.md) | Colour, type, surfaces, motion, and the primitives every screen is built from |
 | [ui/app-shell.md](ui/app-shell.md) | The three-zone console layout, navigation, and responsive behaviour |
 | [decisions-model.md](decisions-model.md) | Why "needs a decision" is derived from world state instead of the event feed |

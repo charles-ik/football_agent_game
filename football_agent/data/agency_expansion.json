@@ -1,0 +1,63 @@
+{
+  "staff": {
+    "candidates_per_role": 2,
+    "quality_min": 45,
+    "quality_max": 85,
+    "base_wage": 90,
+    "quality_wage": 3,
+    "hire_weeks": 6,
+    "portfolio_capacity": 4,
+    "trust_max": 0.2,
+    "relationship_max": 0.12,
+    "trust_cap": 0.35
+  },
+  "departments": {
+    "scouting": {
+      "upgrade_cost": 12000,
+      "weekly_cost": 120,
+      "bonus": 0.04
+    },
+    "client_services": {
+      "upgrade_cost": 10000,
+      "weekly_cost": 100,
+      "bonus": 0.04
+    },
+    "networking": {
+      "upgrade_cost": 14000,
+      "weekly_cost": 140,
+      "bonus": 0.025
+    }
+  },
+  "specializations": {
+    "youth_age": 23,
+    "youth_scouting": 0.08,
+    "careers_trust": 0.08,
+    "deals_relationship": 0.05
+  },
+  "objectives": {
+    "growth": {
+      "target": 2,
+      "reward": 2
+    },
+    "stability": {
+      "target": 20,
+      "reward": 2
+    },
+    "careers": {
+      "target": 3,
+      "reward": 3
+    }
+  },
+  "emblems": [
+    "shield",
+    "star",
+    "crown",
+    "globe"
+  ],
+  "accents": [
+    "emerald",
+    "blue",
+    "amber",
+    "violet"
+  ]
+}

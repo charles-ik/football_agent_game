@@ -143,6 +143,7 @@ def negotiation_dto(session: Session, handle: NegotiationHandle) -> Dict[str, An
     neg = handle.negotiation
     body: Dict[str, Any] = {
         "id": handle.id,
+        "revision": world.revision,
         "kind": handle.kind,
         "subject": neg.subject,
         "status": neg.status.value,

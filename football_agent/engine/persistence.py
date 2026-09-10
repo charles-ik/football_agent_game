@@ -13,7 +13,7 @@ from typing import Any, Dict
 from .models import World
 from .serde import decode, encode
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 class SaveError(Exception):
@@ -26,7 +26,7 @@ def to_dict(world: World) -> Dict[str, Any]:
 
 def from_dict(payload: Dict[str, Any]) -> World:
     version = payload.get("schema_version")
-    if version != SCHEMA_VERSION:
+    if version not in (1, SCHEMA_VERSION):
         raise SaveError(
             f"Save file schema v{version} cannot be loaded by engine schema v{SCHEMA_VERSION}."
         )

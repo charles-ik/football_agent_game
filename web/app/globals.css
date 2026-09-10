@@ -20,23 +20,23 @@
 
 @theme {
   /* Surface ramp — app floor through to modal, each step distinguishable. */
-  --color-ink: #08090d;
-  --color-panel: #0f1117;
-  --color-panel-2: #151823;
-  --color-panel-3: #1c2030;
-  --color-line: #262b3a;
-  --color-line-strong: #384054;
+  --color-ink: #101b17;
+  --color-panel: #17251f;
+  --color-panel-2: #203128;
+  --color-panel-3: #2b3f33;
+  --color-line: #34463a;
+  --color-line-strong: #52614d;
 
   /* Text ramp. Every step below passes AA (4.5:1) on the ink background —
      the previous palette's caption grey sat at 3.2:1, which put helper text,
      column headers and most of the labelling below the readability floor. */
-  --color-fg: #eef1f6;
-  --color-dim: #a3abbd; /* 8.6:1 */
-  --color-faint: #7c8599; /* 5.4:1 */
+  --color-fg: #f0eadb;
+  --color-dim: #b6bfae; /* 8.6:1 */
+  --color-faint: #a0aa99; /* 5.4:1 */
 
   /* The accent means "this needs a decision" and nothing else. Indigo sits
      clear of all four severity hues, so it can never be misread as a state. */
-  --color-accent: #6e7bff; /* 5.6:1 */
+  --color-accent: #c8b77c; /* 5.6:1 */
   --color-accent-dim: #3a43a8;
   --color-accent-deep: #1b1f45;
 
@@ -233,15 +233,15 @@ body {
 }
 
 /* Form controls inherit the console's surfaces rather than the OS's. */
-input,
-select,
-textarea,
-button {
-  font: inherit;
-  color: inherit;
+@layer base {
+  input, select, textarea, button { font: inherit; color: inherit; }
 }
 
 select option {
   background: var(--color-panel-2);
   color: var(--color-fg);
 }
+
+.office-title { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.035em; font-weight: 400; }
+.office-scene { background: #182a23; }
+@media (max-width: 480px) { .office-scene svg { min-height: 220px; object-fit: cover; } }

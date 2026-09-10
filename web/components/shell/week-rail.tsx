@@ -15,10 +15,12 @@ export function WeekRail({
   decisions,
   recent,
   pending,
+  revision,
 }: {
   decisions: Decision[];
   recent: EventDTO[];
   pending: number;
+  revision: number;
 }) {
   return (
     <aside
@@ -48,7 +50,7 @@ export function WeekRail({
       </div>
 
       <div className="shrink-0 border-t border-line bg-panel/80 p-3">
-        <ContinueButton pending={pending} variant="rail" />
+        <ContinueButton revision={revision} decisions={decisions} pending={pending} variant="rail" />
       </div>
     </aside>
   );

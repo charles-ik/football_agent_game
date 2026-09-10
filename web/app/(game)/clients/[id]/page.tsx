@@ -5,6 +5,10 @@
 // showed the same. Ability and potential remain ranges: signing him did not
 // make your read on him perfect.
 
+import Link from "next/link";
+import { CareerPanel } from "@/components/career-panel";
+import { getCareers } from "@/lib/career-api";
+import { getGameState } from "@/lib/api";
 import { notFound } from "next/navigation";
 import { Activity, Building2, Shield } from "lucide-react";
 
@@ -35,7 +39,8 @@ export default async function ClientDetailPage({
     if (isApiError(error) && error.status === 404) notFound();
     throw error;
   }
-  const meta = await getMeta();
+  const [meta, careers, game] = await Promise.all([getMeta(), getCareers(), getGameState()]);
+  const career = careers.clients.find(c => c.player_id === playerId);
   const traitBlurbs = meta.trait_blurbs;
 
   const autoNegotiate = negotiate ? Number.parseInt(negotiate, 10) : null;
@@ -71,7 +76,10 @@ export default async function ClientDetailPage({
         note={traitBlurbs[player.trait]}
       />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <nav aria-label="Client sections" className="flex gap-2 overflow-x-auto border-b border-line pb-3">
+        {[['overview','Overview'],['career','Career'],['deals','Deals'],['contracts','Contracts']].map(([id,label]) => <a key={id} href={`#${id}`} className="rounded-full border border-line px-4 py-2 text-sm hover:bg-panel-2">{label}</a>)}
+      </nav>
+      <section id="overview" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile
           label="Wage"
           value={<Money value={detail.wage} />}
@@ -124,7 +132,7 @@ export default async function ClientDetailPage({
           </dl>
           {/* Playing time is the rule that makes greed punishable, so when it
               has gone wrong the screen says so in words, not just a colour. */}
-          {(detail.playing_time === "bench" || detail.playing_time === "reserve") && (
+          {(detail.playing_time === "fringe" || detail.playing_time === "reserve") && (
             <p className="t-note mt-3 text-warn">
               He is not playing. He will stop developing, and his trust in you will keep sliding
               until that changes — a bigger wage does not compensate for it.
@@ -163,6 +171,8 @@ export default async function ClientDetailPage({
         </PanelSection>
       </div>
 
+      <div id="career">{career && <CareerPanel client={career} revision={game.revision}/>}</div>
+      <div id="deals"/>
       <PanelSection
         title="Approaches"
         note="Clubs circling him. Each one is a single, spendable negotiation."
@@ -172,7 +182,8 @@ export default async function ClientDetailPage({
         <InterestCards detail={detail} autoNegotiate={autoNegotiate} />
       </PanelSection>
 
-      <PanelSection title="What you can do about him">
+      <div id="contracts"/>
+      <PanelSection title="Contracts and representation">
         <ClientActions detail={detail} />
       </PanelSection>
     </div>
@@ -180,10 +191,10 @@ export default async function ClientDetailPage({
 }
 
 const ROLE_TONE: Record<string, string> = {
-  star: "text-good",
-  regular: "text-fg",
+  key: "text-good",
+  starter: "text-fg",
   rotation: "text-dim",
-  bench: "text-warn",
+  fringe: "text-warn",
   reserve: "text-bad",
 };
 

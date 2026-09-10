@@ -73,21 +73,7 @@ def _expire_interests(world: World, balance: Balance) -> List[Event]:
                 club_id=interest.club_id,
             )
         )
-        record = world.clients.get(player.id)
-        if record and record.promised_move and not world.interests_for(player.id):
-            record.promised_move = False
-            trust_system.adjust(
-                world, balance, player.id, -balance.f("trust.failed_promise_penalty")
-            )
-            events.append(
-                ev(
-                    INTEREST_EXPIRED,
-                    f"You told {player.name} a move was coming. It didn't.",
-                    world.week,
-                    Severity.WARNING,
-                    player_id=player.id,
-                )
-            )
+
     return events
 
 
@@ -352,6 +338,9 @@ def complete_deal(
 ) -> List[Event]:
     """Execute an agreed package. Returns the events it produced."""
     events: List[Event] = []
+    from ..market import active_loan
+    if active_loan(world, interest.player_id):
+        return [ev(TRANSFER_FAILED, "A loaned player cannot move permanently.", world.week, Severity.WARNING)]
     player = world.players[interest.player_id]
     club = world.clubs[interest.club_id]
     record = world.clients.get(player.id)
@@ -389,6 +378,12 @@ def complete_deal(
     else:
         club.wage_committed += wage - (player.contract.wage if player.contract else 0.0)
 
+    from ..market import relationship_change, cfg
+    relationship_change(world, balance, club.id, cfg(balance, "relationship_deal_gain"), "Completed a suitable deal")
+    if not interest.is_renewal:
+        from ..careers import fulfill_move
+        events.extend(fulfill_move(world, balance, player.id))
+
     player.contract = Contract(wage=wage, expires_week=week + years * 52, years_signed=years)
     player.transfer_listed = False
     player.seeking_move = False
@@ -405,6 +400,8 @@ def complete_deal(
         )
         world.agency.cash += commission
         world.agency.total_commission += commission
+        from .finance import record_commission
+        record_commission(world, commission)
         record.deals_done += 1
         record.promised_move = False
 

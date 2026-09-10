@@ -1,0 +1,16 @@
+{
+  "wage_goal_multiplier": 1.15,
+  "loyalty_weeks": 12,
+  "playing_goal_weeks": 6,
+  "goal_deadline_weeks": 26,
+  "goal_cooldown_weeks": 4,
+  "goal_success_trust": 3,
+  "goal_failure_trust": 2,
+  "promise_deadline_weeks": 12,
+  "promise_cooldown_weeks": 8,
+  "promise_success_trust": 6,
+  "promise_failure_trust": 10,
+  "story_cooldown_weeks": 16,
+  "honest_trust": 1,
+  "practical_trust": 1
+}

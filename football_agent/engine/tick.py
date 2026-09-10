@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import List
 
 from . import calendar as cal
+from . import agency_management, careers, market
 from . import reputation
 from .balance import Balance, load_balance
 from .events import (
@@ -45,10 +46,14 @@ def tick(world: World, balance: Balance | None = None) -> List[Event]:
     if world.game_over:
         return []
 
+    agency_management.initialize(world, balance)
+    careers.initialize(world, balance)
+    market.initialize(world, balance)
     previous_week = world.week
     world.week += 1
     world.season = cal.season_number(balance, world.week)
 
+    loan_events = market.run(world, stream(world.seed, world.week, "market"), balance)
     events: List[Event] = [
         ev(
             WEEK_ADVANCED,
@@ -59,6 +64,8 @@ def tick(world: World, balance: Balance | None = None) -> List[Event]:
             season_week=cal.season_week(balance, world.week),
         )
     ]
+
+    events.extend(loan_events)
 
     if cal.is_season_start(balance, world.week) and world.week > 1:
         events.extend(_season_rollover(world, balance))
@@ -73,6 +80,13 @@ def tick(world: World, balance: Balance | None = None) -> List[Event]:
         if world.game_over:
             break
 
+    for event in events:
+        careers.record_event(world, event)
+    careers.reconcile_departures(world)
+    if not world.game_over:
+        events.extend(careers.run(world, stream(world.seed, world.week, "careers"), balance))
+        events.extend(agency_management.run(world, stream(world.seed, world.week, "agency"), balance))
+    world.recent_events = (world.recent_events + events)[-120:]
     _decay_reputation(world, balance)
     return events
 

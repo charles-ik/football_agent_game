@@ -68,13 +68,23 @@ class SessionStore:
     def __init__(self) -> None:
         self._sessions: Dict[str, Session] = {}
 
-    def create(self, world: World, balance: Balance, save_path: Path) -> Session:
+    def create(self, world: World, balance: Balance, save_path: Path, *, share_existing: bool = False) -> Session:
         self._evict_stale()
+        # Loading the same save shares its authoritative in-process session.
+        for existing in self._sessions.values():
+            if existing.save_path.resolve() == save_path.resolve() and existing.world.seed == world.seed and existing.world.revision >= world.revision:
+                if share_existing:
+                    existing.touch()
+                    return existing
+        if not share_existing:
+            for key in [key for key, value in self._sessions.items() if value.save_path.resolve() == save_path.resolve()]:
+                del self._sessions[key]
         session = Session(
             id=secrets.token_urlsafe(24),
             world=world,
             balance=balance,
             save_path=save_path,
+            inbox=list(world.recent_events),
         )
         session.touch()
         self._sessions[session.id] = session

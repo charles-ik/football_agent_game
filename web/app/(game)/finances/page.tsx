@@ -55,7 +55,7 @@ export default async function FinancesPage() {
         <StatTile
           label="Next window"
           value={`${finances.weeks_until_next_window}w`}
-          sub="Nothing can be earned before then."
+          sub="Retainers continue; new deal commission depends on the window."
         />
       </section>
 
@@ -87,6 +87,7 @@ export default async function FinancesPage() {
                   <Th align="right">Scouts</Th>
                   <Th align="right">Premises</Th>
                   <Th align="right">Regions</Th>
+                  <Th align="right">Support team</Th><Th align="right">Investments</Th>
                   <Th align="right">Net</Th>
                 </tr>
               </thead>
@@ -113,6 +114,7 @@ export default async function FinancesPage() {
                     <Td align="right" className="text-dim">
                       <Money value={week.region_costs} />
                     </Td>
+                    <Td align="right"><Money value={week.support_cost}/></Td><Td align="right"><Money value={week.investments}/></Td>
                     <Td align="right" className="font-medium">
                       <Money value={week.net} signed />
                     </Td>

@@ -34,6 +34,8 @@ class NewGameRequest(BaseModel):
     seed: Optional[int] = None
     name: str = "Your Agency"
     slot: str = "autosave"
+    emblem: str = "shield"
+    accent: str = "emerald"
 
 
 class LoadGameRequest(BaseModel):
@@ -50,6 +52,13 @@ def new_game(body: NewGameRequest, response: Response) -> Dict[str, Any]:
     balance = default_balance()
     seed = body.seed if body.seed is not None else random.randrange(1, 2**31)
     world = create_world(seed, balance, body.name or "Your Agency")
+    from football_agent.engine import agency_management, careers, market
+    agency_management.initialize(world, balance)
+    result = agency_management.action(world, balance, "identity", {"emblem": body.emblem, "accent": body.accent})
+    if not result.ok:
+        raise HTTPException(400, result.message)
+    careers.initialize(world, balance)
+    market.initialize(world, balance)
     session = store.create(world, balance, save_path)
     persistence.save(world, save_path)
     set_session_cookie(response, session.id)
@@ -64,7 +73,12 @@ def load_game(body: LoadGameRequest, response: Response) -> Dict[str, Any]:
     if not persistence.exists(save_path):
         raise HTTPException(404, "save_not_found")
     world = persistence.load(save_path)  # SaveError -> 409 via handler
-    session = store.create(world, default_balance(), save_path)
+    from football_agent.engine import agency_management, careers, market
+    balance = default_balance()
+    agency_management.initialize(world, balance)
+    careers.initialize(world, balance)
+    market.initialize(world, balance)
+    session = store.create(world, balance, save_path, share_existing=True)
     set_session_cookie(response, session.id)
     return {"state": dto.game_state_dto(session)}
 
@@ -110,15 +124,11 @@ def continue_week(session: Session = Depends(get_active_session)) -> Dict[str, A
     # discarded every non-ACTION event at each week boundary, which meant the
     # Recent feed could only ever show the week just gone and the game had no
     # readable memory at all. Keep a rolling window of everything instead.
-    session.inbox = [
-        e for e in session.inbox if e.week >= session.world.week - INBOX_HISTORY_WEEKS
-    ]
-    session.inbox.extend(events)
-    session.inbox = session.inbox[-INBOX_LIMIT:]
-    persistence.save(session.world, session.save_path)
+    session.inbox = list(session.world.recent_events)
     return {
         "state": dto.game_state_dto(session),
         "events": [dto.event_dto(e) for e in events],
+        "open_decision_ids": [d["id"] for d in dto.decisions_dto(session.world, session.balance) if d["actionable"]],
         "notable": [dto.event_dto(e) for e in events if e.kind not in dto.NOISE_KINDS],
     }
 

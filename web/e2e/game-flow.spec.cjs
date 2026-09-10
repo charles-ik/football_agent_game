@@ -83,21 +83,59 @@ test("new game, assign a scout, continue, sign a client", async ({ page }) => {
   await expect(page.getByRole("table")).toBeVisible();
 });
 
-test("the decision rail clears an obligation once it is resolved", async ({ page }) => {
-  // The regression this guards: the old list was a four-week window over
-  // ACTION events, so it kept showing prompts for things already dealt with.
+test("the decision rail clears a resolved career conversation", async ({ page, request }) => {
   await page.goto("/new-game");
   await page.getByLabel("Agency name").fill("Rail Agency");
   await page.getByLabel("Seed (optional)").fill("42");
-  await page.getByRole("button", { name: "Start a new agency" }).click();
-  await page.getByRole("link", { name: "Start week 1" }).click();
-  await expect(page).toHaveURL("/");
+  await page.getByRole("button", {name:"Start a new agency"}).click();
+  await page.getByRole("link", {name:"Start week 1"}).click();
+  const session = (await page.context().cookies()).find(c=>c.name==='fa_session');
+  const headers = {cookie:`fa_session=${session.value}`};
+  let decision;
+  for (let n=0;n<15&&!decision;n++) {
+    await request.post('http://127.0.0.1:8100/api/game/continue',{headers});
+    const inbox = await (await request.get('http://127.0.0.1:8100/api/game/decisions',{headers})).json();
+    decision = inbox.decisions.find(d=>d.kind==='career.story');
+  }
+  expect(decision).toBeTruthy();
+  await page.goto('/careers');
+  const rail = page.getByRole('complementary',{name:'This week'});
+  await expect(rail.locator(`[data-decision-id="${decision.id}"]`)).toBeVisible();
+  await page.getByRole('button',{name:'Have an honest conversation'}).first().click();
+  await expect(rail.locator(`[data-decision-id="${decision.id}"]`)).toHaveCount(0);
+  const after = await (await request.get('http://127.0.0.1:8100/api/game/decisions',{headers})).json();
+  expect(after.decisions.some(d=>d.id===decision.id)).toBeFalsy();
+});
 
-  const rail = page.getByRole("complementary", { name: "This week" });
-  await expect(rail).toBeVisible();
-
-  // Whatever the rail shows, it must agree with the count on the button —
-  // both now read the same derived list rather than two different sources.
-  const continueButton = page.locator('[data-continue="rail"]');
-  await expect(continueButton).toBeVisible();
+test('agency expansion is usable on desktop and a narrow phone', async ({page}) => {
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto('/new-game');
+  await page.getByLabel('Agency name').fill('Northbank Agency');
+  await page.getByLabel('Seed (optional)').fill('42');
+  await page.getByRole('button',{name:'Start a new agency'}).click();
+  await page.getByRole('link',{name:'Start week 1'}).click();
+  await expect(page.getByRole('heading',{name:'Welcome to the office.'})).toBeVisible();
+  await page.screenshot({path:'/tmp/fa-office-desktop.png',fullPage:true});
+  await page.goto('/agency');
+  await page.getByRole('button',{name:/^Hire /}).first().click();
+  await expect(page.getByText('Your support slots are full.',{exact:false})).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Your support slots are full.',{exact:false})).toBeVisible();
+  for (const route of ['/agency','/careers','/market','/world','/finances','/headquarters','/season-review']) {
+    await page.goto(route);
+    await expect(page.locator('main h1')).toBeVisible();
+    await expect(page.getByText('Something went wrong',{exact:false})).toHaveCount(0);
+  }
+  await page.setViewportSize({width:360,height:800});
+  await page.goto('/market');
+  await expect(page.locator('[data-continue="floating"]')).toBeVisible();
+  await page.getByRole('button',{name:/Review \d+ decisions/}).filter({visible:true}).click();
+  await expect(page.getByRole('dialog',{name:'This week · your decisions'})).toBeVisible();
+  await page.getByRole('button',{name:'Keep managing'}).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  await page.screenshot({path:'/tmp/fa-market-mobile.png',fullPage:true});
+  await page.getByRole('button',{name:'More',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'Around the agency'})).toBeVisible();
+  await page.getByRole('dialog').getByRole('link',{name:'Scouting',exact:true}).click();
+  await expect(page).toHaveURL('/scouting');
 });

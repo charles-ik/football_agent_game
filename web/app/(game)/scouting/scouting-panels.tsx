@@ -9,10 +9,12 @@
 // visible, and it is the one thing this interface can do that the terminal
 // could not.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Eye, MapPin, TriangleAlert, UserPlus } from "lucide-react";
 
+import { useGameRevision } from "@/components/game-revision";
 import { ActionButton } from "@/components/action-button";
 import { Dialog } from "@/components/dialog";
 import { Money } from "@/components/money";
@@ -222,7 +224,7 @@ export function ScoutManager({
                           Focus
                         </button>
                         <ActionButton
-                          action={() => dismissScout(scout.id)}
+                          action={revision => dismissScout(scout.id, revision)}
                           confirm={`Let ${scout.name} go? You stop paying him this week, and you lose whatever he was building up in his region.`}
                           className="px-2 py-1 text-xs"
                         >
@@ -262,22 +264,37 @@ function AssignDialog({
   onClose: () => void;
 }) {
   const { toastResult } = useToast();
+  const revision = useGameRevision();
   const router = useRouter();
   const [regionId, setRegionId] = useState(scouting.regions[0]?.id ?? "east");
   const [position, setPosition] = useState("");
   const [maxAge, setMaxAge] = useState("");
 
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (!scout) return;
+    setRegionId(scout.region_id ?? scouting.regions[0]?.id ?? "");
+    setPosition(scout.brief_position ?? "");
+    setMaxAge(scout.brief_max_age?.toString() ?? "");
+    setError("");
+    // Initialize when a different scout is opened, preserving failed inputs on refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scout?.id]);
+
   const submit = async () => {
-    const age = maxAge.trim() === "" ? null : Number.parseInt(maxAge, 10);
-    const result = await assignScout(
-      scout!.id,
-      regionId,
-      position || null,
-      age !== null && !Number.isNaN(age) ? age : null,
-    );
-    toastResult(result);
-    router.refresh();
-    onClose();
+    if (!scout || busy) return;
+    const age = maxAge.trim() === "" ? null : Number(maxAge);
+    if (age !== null && (!Number.isInteger(age) || age < 15 || age > 50)) {
+      setError("Enter a whole age between 15 and 50, or leave it empty."); return;
+    }
+    setBusy(true); setError("");
+    try {
+      const result = await assignScout(scout.id, regionId, position || null, age, revision);
+      if (!result.ok) { setError(result.message); return; }
+      toastResult(result); router.refresh(); onClose();
+    } catch (err) { setError(err instanceof Error ? err.message : "Assignment failed. Please try again."); router.refresh(); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -330,16 +347,21 @@ function AssignDialog({
         <div className="flex items-center justify-between gap-2 pt-1">
           <button
             onClick={async () => {
-              const result = await assignScout(scout!.id, null, null, null);
-              toastResult(result);
-              router.refresh();
-              onClose();
+              if (busy) return;
+              setBusy(true); setError("");
+              try {
+                const result = await assignScout(scout!.id, null, null, null, revision);
+                if (!result.ok) {setError(result.message); return;}
+                toastResult(result); router.refresh(); onClose();
+              } catch (err) {setError(err instanceof Error ? err.message : "Could not unassign scout."); router.refresh();}
+              finally {setBusy(false);}
             }}
             className="text-xs text-faint underline-offset-2 transition-colors hover:text-bad hover:underline"
           >
             Pull him off everything
           </button>
-          <button onClick={submit} className={buttonClass.primary}>
+          {error && <p role="alert" className="text-sm text-bad">{error}</p>}
+          <button disabled={busy} onClick={submit} className={buttonClass.primary}>
             Send him
           </button>
         </div>
@@ -358,16 +380,23 @@ function FocusDialog({
   onClose: () => void;
 }) {
   const { toastResult } = useToast();
+  const revision = useGameRevision();
   const router = useRouter();
   const reportsInRegion = scouting.reports.filter(
     (row) => scout?.region_id && row.report.region_id === scout.region_id,
   );
 
+  const [busy,setBusy] = useState(false);
+  const [error,setError] = useState("");
   const pick = async (playerId: number | null) => {
-    const result = await focusScout(scout!.id, playerId);
-    toastResult(result);
-    router.refresh();
-    onClose();
+    if (busy || !scout) return;
+    setBusy(true);setError("");
+    try {
+      const result = await focusScout(scout.id, playerId, revision);
+      if (!result.ok) {setError(result.message);return;}
+      toastResult(result);router.refresh();onClose();
+    } catch (err) {setError(err instanceof Error ? err.message : "Could not focus scout.");router.refresh();}
+    finally {setBusy(false);}
   };
 
   return (
@@ -376,13 +405,15 @@ function FocusDialog({
         Park him on one player. Fewer discoveries, far faster narrowing — this is how you turn a
         maybe into a certainty before the window opens.
       </p>
-      <div className="max-h-64 space-y-1 overflow-y-auto">
+      {error && <p role="alert" className="mb-3 text-sm text-bad">{error}</p>}
+      <div aria-busy={busy} className="max-h-64 space-y-1 overflow-y-auto">
         {reportsInRegion.length === 0 && (
           <p className="text-sm text-faint">No reports in his region yet.</p>
         )}
         {reportsInRegion.map((row) => (
           <button
             key={row.player.id}
+            disabled={busy}
             onClick={() => pick(row.player.id)}
             className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-panel-2"
           >
@@ -404,7 +435,7 @@ function FocusDialog({
         ))}
       </div>
       <div className="mt-3 flex justify-end">
-        <button onClick={() => pick(null)} className={buttonClass.secondary}>
+        <button disabled={busy} onClick={() => pick(null)} className={buttonClass.secondary}>
           Back to general duty
         </button>
       </div>
@@ -444,7 +475,7 @@ function HireDialog({
                 fee <Money value={candidate.signing_fee} />
               </div>
             </div>
-            <ActionButton action={() => hireScout(candidate.index)} kind="primary" className="text-xs">
+            <ActionButton action={revision => hireScout(candidate.index, revision)} kind="primary" className="text-xs">
               Hire
             </ActionButton>
           </div>
@@ -456,8 +487,14 @@ function HireDialog({
 
 type ReportSort = "potential" | "ability" | "age" | "watched";
 
-export function ReportsTable({ reports }: { reports: ScoutingReportRow[] }) {
+export function ReportsTable({ reports, shortlisted = [] }: { reports: ScoutingReportRow[]; shortlisted?: number[] }) {
   const [request, setRequest] = useState<NegotiationRequest | null>(null);
+  const [query, setQuery] = useState("");
+  const [positionFilter, setPositionFilter] = useState("");
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [shortlistOnly, setShortlistOnly] = useState(false);
+  const [ageFilter, setAgeFilter] = useState("");
+  const [regionFilter, setRegionFilter] = useState("");
   const [sort, setSort] = useState<{ key: ReportSort; desc: boolean }>({
     key: "potential",
     desc: true,
@@ -476,8 +513,8 @@ export function ReportsTable({ reports }: { reports: ScoutingReportRow[] }) {
           return row.report.weeks_watched;
       }
     };
-    return [...reports].sort((a, b) => (sort.desc ? value(b) - value(a) : value(a) - value(b)));
-  }, [reports, sort]);
+    return reports.filter(row => (!query || row.player.name.toLowerCase().includes(query.toLowerCase())) && (!positionFilter || row.player.position === positionFilter) && (!availableOnly || row.can_approach) && (!shortlistOnly || shortlisted.includes(row.player.id)) && (!ageFilter || row.player.age <= Number(ageFilter)) && (!regionFilter || row.report.region_id === regionFilter)).sort((a, b) => (sort.desc ? value(b) - value(a) : value(a) - value(b)));
+  }, [reports, sort, query, positionFilter, availableOnly, shortlistOnly, shortlisted, ageFilter, regionFilter]);
 
   const toggle = (key: ReportSort) =>
     setSort((current) => (current.key === key ? { key, desc: !current.desc } : { key, desc: true }));
@@ -498,6 +535,15 @@ export function ReportsTable({ reports }: { reports: ScoutingReportRow[] }) {
 
   return (
     <>
+      <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
+        <input aria-label="Search prospects" placeholder="Find a player…" value={query} onChange={e=>setQuery(e.target.value)} className={cn(inputClass,"w-40")}/>
+        <select aria-label="Filter position" value={positionFilter} onChange={e=>setPositionFilter(e.target.value)} className={cn(inputClass,"w-auto")}><option value="">All positions</option>{['GK','DF','MF','FW'].map(p=><option key={p}>{p}</option>)}</select>
+        <input aria-label="Maximum prospect age" placeholder="Max age" type="number" min="15" max="50" value={ageFilter} onChange={e=>setAgeFilter(e.target.value)} className={cn(inputClass,"w-24")}/>
+        <select aria-label="Filter region" value={regionFilter} onChange={e=>setRegionFilter(e.target.value)} className={cn(inputClass,"w-auto")}><option value="">All regions</option>{[...new Set(reports.map(r=>r.report.region_id))].map(r=><option key={r}>{r}</option>)}</select>
+        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={availableOnly} onChange={e=>setAvailableOnly(e.target.checked)}/>Approachable</label>
+        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={shortlistOnly} onChange={e=>setShortlistOnly(e.target.checked)}/>Shortlist</label>
+      </div>
+      {rows.length === 0 && <p className="p-4 text-sm text-dim">No players match these filters.</p>}
       <Table>
         <thead>
           <tr>
@@ -516,7 +562,7 @@ export function ReportsTable({ reports }: { reports: ScoutingReportRow[] }) {
             <tr key={row.player.id} className="transition-colors hover:bg-panel-2">
               <Td className="font-medium">
                 <span className="flex items-center gap-2">
-                  {row.player.name}
+                  <Link href={`/prospects/${row.player.id}`} className="hover:text-accent underline-offset-4 hover:underline">{row.player.name}</Link>
                   {row.player.represented_by && (
                     <Badge title={`Represented by ${row.player.represented_by}`}>
                       {row.player.represented_by}

@@ -20,6 +20,7 @@ export function KeyboardShortcuts() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.repeat) return;
       const target = event.target as HTMLElement | null;
       if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
       if (target?.isContentEditable) return;

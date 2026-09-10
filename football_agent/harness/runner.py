@@ -57,6 +57,10 @@ class SeasonResult:
     bankrupt: int
     seasons_to_elite: int
     weeks_insolvent: int
+    objectives_completed: int = 0
+    objective_progress: int = 0
+    support_spending: float = 0.0
+    loans_completed: int = 0
 
 
 def run_one(
@@ -79,6 +83,7 @@ def run_one(
     peak_rep = world.agency.reputation
     seasons_to_elite = 0
     weeks_insolvent = 0
+    support_spending = 0.0
 
     for _ in range(weeks):
         if world.game_over:
@@ -87,7 +92,12 @@ def run_one(
         # Actions and the tick both produce events; the harness must read both,
         # because commission and transfers happen inside actions.
         produced = list(policy.play_week(world, balance, r))
+        from football_agent.engine import careers
+        for event in produced:
+            careers.record_event(world, event)
         produced.extend(tick(world, balance))
+        if world.finance_history and world.finance_history[-1].week == world.week:
+            support_spending += world.finance_history[-1].support_cost
 
         for event in produced:
             if event.kind == TRANSFER_COMPLETED:
@@ -129,6 +139,10 @@ def run_one(
         bankrupt=1 if world.agency.bankrupt else 0,
         seasons_to_elite=seasons_to_elite,
         weeks_insolvent=weeks_insolvent,
+        objectives_completed=sum(bool(r["completed"]) for r in world.agency_development.reviews) + int(world.agency_development.objective_completed),
+        objective_progress=world.agency_development.objective_deals_earned if world.agency_development.objective == "careers" else max(0, len(world.clients) - world.agency_development.objective_baseline_clients) if world.agency_development.objective == "growth" else world.agency_development.stability_weeks,
+        support_spending=round(support_spending, 2),
+        loans_completed=len(world.market_state.loans),
     )
 
 
@@ -142,6 +156,9 @@ def summarise(results: List[SeasonResult]) -> Dict[str, Dict[str, float]]:
         reached = [r.seasons_to_elite for r in rows if r.seasons_to_elite > 0]
         summary[policy] = {
             "runs": len(rows),
+            "median_objectives_completed": statistics.median(r.objectives_completed for r in rows),
+            "median_support_spending": statistics.median(r.support_spending for r in rows),
+            "median_loans_completed": statistics.median(r.loans_completed for r in rows),
             "median_cash": statistics.median(r.final_cash for r in rows),
             "median_commission": statistics.median(r.commission for r in rows),
             "median_reputation": statistics.median(r.final_reputation for r in rows),

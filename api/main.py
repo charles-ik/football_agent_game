@@ -17,13 +17,16 @@ from fastapi.responses import JSONResponse
 
 from football_agent.engine import persistence
 
-from .routers import agency, clients, game, meta, negotiations, scouting
+from .routers import agency, clients, game, meta, negotiations, scouting, management, careers, market
+from .mutations import install_mutation_boundary
 
 WEB_ORIGIN = os.environ.get("FA_WEB_ORIGIN", "http://localhost:3000")
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Football Agent API", docs_url=None, redoc_url=None)
+
+    install_mutation_boundary(app)
 
     app.add_middleware(
         CORSMiddleware,
@@ -64,6 +67,9 @@ def create_app() -> FastAPI:
     app.include_router(clients.router, prefix="/api")
     app.include_router(negotiations.router, prefix="/api")
     app.include_router(agency.router, prefix="/api")
+    app.include_router(management.router, prefix="/api")
+    app.include_router(careers.router, prefix="/api")
+    app.include_router(market.router, prefix="/api")
     return app
 
 

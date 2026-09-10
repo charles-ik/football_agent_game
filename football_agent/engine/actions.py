@@ -101,6 +101,8 @@ def upgrade_hq(world: World, balance: Balance | None = None) -> ActionResult:
     current = hq_level(balance, world.agency.hq_level)
 
     world.agency.cash -= current.upgrade_cost
+    from .systems.finance import record_investment
+    record_investment(world, current.upgrade_cost)
     world.agency.hq_level += 1
     new_level = hq_level(balance, world.agency.hq_level)
     return ActionResult(
@@ -153,6 +155,8 @@ def hire_scout(world: World, candidate: Scout, balance: Balance | None = None) -
         return _fail(f"Signing-on fee is {format_money(fee)}; you can't cover it.")
 
     world.agency.cash -= fee
+    from .systems.finance import record_investment
+    record_investment(world, fee)
     scout = Scout(
         id=world.allocate_id(),
         name=candidate.name,
@@ -500,9 +504,11 @@ def seek_move(world: World, balance: Balance, player_id: int, promise: bool = Fa
     if record is None:
         return _fail("Not one of your clients.")
     player = world.players[player_id]
-    player.seeking_move = True
     if promise:
-        record.promised_move = True
+        from .careers import promise_move
+        if promise_move(world, balance, player_id) is None:
+            return _fail("Give this client time before making another promise.")
+    player.seeking_move = True
     return ActionResult(
         True,
         f"You're shopping {player.name} around."
@@ -516,9 +522,7 @@ def stop_seeking(world: World, player_id: int) -> ActionResult:
         return _fail("No such player.")
     player.seeking_move = False
     record = world.clients.get(player_id)
-    if record:
-        record.promised_move = False
-    return ActionResult(True, f"{player.name} is off the market.")
+    return ActionResult(True, f"{player.name} is off the market. Any existing promise still applies.")
 
 
 def can_deal(world: World, balance: Balance) -> Tuple[bool, str]:
@@ -536,6 +540,9 @@ def can_negotiate_interest(world: World, balance: Balance, interest_id: int) -> 
     interest = world.interests.get(interest_id)
     if interest is None:
         return (False, "That approach is no longer on the table.")
+    from .market import move_busy
+    if move_busy(world, interest.player_id):
+        return (False, "This client already has an active loan or loan negotiation.")
     if interest.attempts_used > 0:
         return (False, "You've already had your talks with them over this approach.")
     player = world.players.get(interest.player_id)
@@ -559,6 +566,9 @@ def accept_deal(
     if interest is None:
         return _fail("That approach is no longer on the table.")
 
+    from .market import move_busy
+    if move_busy(world, interest.player_id):
+        return _fail("This client already has a loan or loan negotiation.")
     events = complete_deal(world, balance, interest, wage, fee, years)
     failed = any(e.kind == "transfer.failed" for e in events)
     return ActionResult(not failed, events[0].message if events else "Nothing happened.", events)

@@ -1,0 +1,20 @@
+{
+  "relationship_initial": 50,
+  "relationship_pitch_gain": 1,
+  "relationship_deal_gain": 4,
+  "relationship_failed_loss": 2,
+  "relationship_history_limit": 12,
+  "pitch_chance": 0.4,
+  "pitch_relationship_factor": 0.004,
+  "pitch_min_need": 0.1,
+  "loan_min_need": 0.1,
+  "loan_parent_max_ratio": 1.0,
+  "loan_min_contribution": 25,
+  "loan_max_contribution": 100,
+  "loan_fee_wage_weeks": 2,
+  "loan_rounds": 3,
+  "loan_talk_ttl": 2,
+  "loan_commission_factor": 0.25,
+  "rival_warning_weeks": 3,
+  "loan_max_fee_wage_factor": 0.1
+}

@@ -96,14 +96,12 @@ def _complete(session: Session, handle: NegotiationHandle) -> Optional[Dict[str,
             result = actions.accept_deal(world, balance, interest.id, wage, fee, handle.years)
         session.inbox.extend(result.events)
         drop(session, handle)
-        persistence.save(world, session.save_path)
         return _result_body(result)
 
     if neg.status in (Status.WALKED, Status.ABANDONED):
         result = actions.close_negotiation(world, balance, neg)
         session.inbox.extend(result.events)
         drop(session, handle)
-        persistence.save(world, session.save_path)
         return _result_body(result) if result.message else None
 
     # EXHAUSTED is not terminal: their last counter is on the table. The handle

@@ -18,6 +18,10 @@ const KIND_LABEL: Record<Decision["kind"], string> = {
   contract_expiring: "Contract ending",
   agent_contract_expiring: "Your agreement",
   approach: "Approach",
+  "career.story": "Client conversation",
+  "career.promise": "Your promise",
+  "market.rival": "Rival approach",
+  "market.loan": "Loan talks",
 };
 
 const SEVERITY_STYLE: Record<string, { border: string; text: string; dot: string }> = {
@@ -52,6 +56,7 @@ export function DecisionCard({
   return (
     <Link
       href={decision.href}
+      data-decision-id={decision.id}
       className={cn(
         "group block border-l-2 bg-panel px-3 py-2.5 transition-colors hover:bg-panel-2",
         style.border,

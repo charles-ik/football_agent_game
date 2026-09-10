@@ -57,7 +57,7 @@ def test_thirty_continues_run_cleanly(api_game):
     result = tick(api_game, 30)
     state = result["state"]
     assert state["calendar"]["week"] == 31
-    assert set(result) == {"state", "events", "notable"}
+    assert set(result) == {"state", "events", "notable", "revision", "open_decision_ids"}
     assert len(result["notable"]) <= len(result["events"])
 
 
@@ -77,7 +77,7 @@ def test_inbox_splits_decisions_from_noise(api_game):
             "contract_expired",
             "contract_expiring",
             "agent_contract_expiring",
-            "approach",
+            "approach", "career.story", "career.promise", "market.rival", "market.loan", "rival_warning", "loan_talk",
         }
 
 

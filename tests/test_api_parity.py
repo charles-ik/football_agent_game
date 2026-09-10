@@ -57,4 +57,11 @@ def test_api_and_engine_agree(api_client):
     for _ in range(5):
         engine_tick(world, balance)
 
-    assert persistence.to_dict(api_world) == persistence.to_dict(world)
+    api_state = persistence.to_dict(api_world)
+    engine_state = persistence.to_dict(world)
+    # Transport revisions/retry receipts and the UI's action-inclusive inbox do
+    # not change simulation rules. All career and economic state must match.
+    for state in (api_state, engine_state):
+        for key in ("revision", "mutation_receipts", "recent_events"):
+            state["world"].pop(key)
+    assert api_state == engine_state

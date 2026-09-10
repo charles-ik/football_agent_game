@@ -7,6 +7,8 @@
 // The number keys from the CLI are preserved and shown, since anyone who
 // played the terminal version already has them in their fingers.
 
+import { useState } from "react";
+import { Dialog } from "@/components/dialog";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,27 +18,35 @@ import {
   Search,
   Trophy,
   Users,
+  Handshake,
+  Heart,
+  Shield, Star, Crown, Globe2, MoreHorizontal,
 } from "lucide-react";
 
 import { cn } from "@/components/ui";
 
 export const NAV = [
-  { href: "/", label: "Dashboard", key: "1", Icon: LayoutDashboard },
+  { href: "/", label: "Office", key: "1", Icon: LayoutDashboard },
   { href: "/clients", label: "Clients", key: "2", Icon: Users },
   { href: "/scouting", label: "Scouting", key: "3", Icon: Search },
-  { href: "/headquarters", label: "Premises", key: "4", Icon: Building2 },
+  { href: "/agency", label: "Agency", key: "4", Icon: Building2 },
   { href: "/finances", label: "Finances", key: "5", Icon: Banknote },
-  { href: "/leagues", label: "Leagues", key: "6", Icon: Trophy },
+  { href: "/world", label: "World", key: "6", Icon: Trophy },
+  { href: "/market", label: "Market", key: "7", Icon: Handshake },
+  { href: "/careers", label: "Careers", key: "8", Icon: Heart },
 ] as const;
 
 export function NavRail({
   counts,
   agencyName,
+  emblem = "shield",
 }: {
   counts: Record<string, number>;
   agencyName: string;
+  emblem?: string;
 }) {
   const pathname = usePathname();
+  const Emblem = ({shield:Shield,star:Star,crown:Crown,globe:Globe2} as Record<string,typeof Shield>)[emblem] ?? Shield;
 
   return (
     <nav
@@ -48,7 +58,7 @@ export function NavRail({
           aria-hidden
           className="grid h-7 w-7 shrink-0 place-items-center rounded bg-accent/15 text-[13px] font-bold text-accent"
         >
-          {agencyName.slice(0, 1).toUpperCase()}
+          <Emblem size={17}/>
         </span>
         <span className="hidden truncate text-sm font-semibold tracking-tight xl:block">
           {agencyName}
@@ -110,34 +120,16 @@ export function NavRail({
 /** The same navigation as a horizontal strip, for viewports too narrow for a rail. */
 export function NavStrip({ counts }: { counts: Record<string, number> }) {
   const pathname = usePathname();
-  return (
-    <nav
-      aria-label="Sections"
-      className="flex gap-1 overflow-x-auto border-b border-line bg-panel/80 px-2 py-1.5 backdrop-blur md:hidden"
-    >
-      {NAV.map(({ href, label, Icon }) => {
-        const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
-        const count = counts[href] ?? 0;
-        return (
-          <Link
-            key={href}
-            href={href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-colors",
-              active ? "bg-panel-3 font-medium text-fg" : "text-dim hover:bg-panel-2",
-            )}
-          >
-            <Icon size={14} strokeWidth={1.75} aria-hidden />
-            {label}
-            {count > 0 && (
-              <span className="num rounded-full bg-accent px-1.5 text-[10px] font-bold text-ink">
-                {count}
-              </span>
-            )}
-          </Link>
-        );
-      })}
+  const [more,setMore] = useState(false);
+  const main = NAV.filter(item => ["/", "/clients", "/market"].includes(item.href));
+  return <>
+    <nav aria-label="Sections" className="fixed bottom-[108px] left-0 right-0 z-20 grid grid-cols-4 border-t border-line bg-panel/95 px-2 py-1 backdrop-blur md:hidden">
+      {main.map(({href,label,Icon})=><Link key={href} href={href} aria-current={pathname===href?"page":undefined} className={cn("flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs",pathname===href?"bg-panel-3 text-accent":"text-dim")}><Icon size={17}/>{label}{(counts[href]??0)>0&&<span className="sr-only">{counts[href]} open decisions</span>}</Link>)}
+      <button onClick={()=>setMore(true)} className="flex flex-col items-center gap-1 py-2 text-xs text-dim"><MoreHorizontal size={17}/>More</button>
     </nav>
-  );
+    <Dialog open={more} onClose={()=>setMore(false)} title="Around the agency">
+      <div className="grid grid-cols-2 gap-2">{NAV.map(({href,label,Icon})=><Link key={href} href={href} onClick={()=>setMore(false)} className="flex items-center gap-2 rounded-lg border border-line p-4 text-sm"><Icon size={17}/>{label}</Link>)}</div>
+      <Link href="/season-review" onClick={()=>setMore(false)} className="mt-3 block p-3 text-sm text-accent">Season review & milestones ↗</Link>
+    </Dialog>
+  </>;
 }

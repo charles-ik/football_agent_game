@@ -71,6 +71,7 @@ export function PackageHaggle({
       try {
         onUpdate(await fn());
       } catch (error) {
+        if (error instanceof Error && error.message.startsWith("Those talks have lapsed")) onClose();
         toast(error instanceof Error ? error.message : "Something broke.", "bad");
       }
     });
@@ -199,7 +200,7 @@ export function PackageHaggle({
               <div className="ml-auto flex items-center gap-2">
                 {!finalRound && (
                   <button
-                    onClick={() => run(() => proposePackage(neg.id, wage, fee))}
+                    onClick={() => run(() => proposePackage(neg.id, wage, fee, neg.revision))}
                     disabled={pending}
                     className={buttonClass.ghost}
                   >
@@ -207,7 +208,7 @@ export function PackageHaggle({
                   </button>
                 )}
                 <button
-                  onClick={() => run(() => acceptCounter(neg.id))}
+                  onClick={() => run(() => acceptCounter(neg.id, neg.revision))}
                   disabled={pending}
                   className={buttonClass.primary}
                 >
@@ -224,10 +225,10 @@ export function PackageHaggle({
             <div className="flex items-center gap-3">
               <WalkAwayButton
                 disabled={pending}
-                onClick={() => run(() => abandonNegotiation(neg.id))}
+                onClick={() => run(() => abandonNegotiation(neg.id, neg.revision))}
               />
               <button
-                onClick={() => run(() => proposePackage(neg.id, wage, fee))}
+                onClick={() => run(() => proposePackage(neg.id, wage, fee, neg.revision))}
                 disabled={pending}
                 className={buttonClass.primary}
               >

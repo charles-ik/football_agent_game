@@ -392,12 +392,100 @@ class PassivePolicy(Policy):
         return self.events
 
 
+class ExpansionPolicy(BalancedPolicy):
+    """Measured expansion with one management pass per week, using public actions."""
+
+    focus = "growth"
+
+    def __init__(self):
+        super().__init__()
+        self.name = "expansion_" + self.focus
+        self.last_expansion_week = -1
+
+    def play_week(self, world, balance, r):
+        from football_agent.engine import agency_management as management, careers, market
+        produced = list(super().play_week(world, balance, r))
+        self.events = produced
+        if self.last_expansion_week == world.week:
+            return produced
+        self.last_expansion_week = world.week
+        d = world.agency_development
+        objective = "growth" if self.focus == "growth" else "careers"
+        if cal.season_week(balance, world.week) == 1 and d.objective != objective:
+            self._do(management.action(world, balance, "objective", {"objective": objective}))
+        specialty = {"growth": "youth", "clients": "careers", "deals": "deals"}[self.focus]
+        snapshot = management.state(world, balance)
+        if snapshot["can_specialize"] and d.specialization != specialty:
+            self._do(management.action(world, balance, "specialization", {"specialization": specialty}))
+        role = "club_liaison" if self.focus == "deals" else "client_manager"
+        if not any(s.role == role for s in d.staff) and len(d.staff) < world.agency.hq_level:
+            pool = [c for c in d.candidates if c.role == role]
+            if pool:
+                candidate = max(pool, key=lambda c: c.quality)
+                if self._can_afford(world, balance, candidate.hire_cost + candidate.wage * self.cash_buffer_weeks):
+                    self._do(management.action(world, balance, "hire", {"candidate_id": candidate.id}))
+        for staff in d.staff:
+            if staff.role == "client_manager":
+                ids = [pid for pid, record in sorted(world.clients.items(), key=lambda item: item[1].trust)][:staff.capacity]
+                if staff.player_ids != ids:
+                    self._do(management.action(world, balance, "assign", {"staff_id": staff.id, "player_ids": ids}))
+            else:
+                clubs = sorted(world.clubs.values(), key=lambda club: -sum(club.needs.get(p.position.value, 0) for p in world.client_players()))
+                ids = [club.id for club in clubs[:staff.capacity]]
+                if staff.club_ids != ids:
+                    self._do(management.action(world, balance, "assign", {"staff_id": staff.id, "club_ids": ids}))
+        department = {"growth": "scouting", "clients": "client_services", "deals": "networking"}[self.focus]
+        row = next(row for row in management.state(world, balance)["departments"] if row["id"] == department)
+        if row["can_upgrade"] and self._can_afford(world, balance, row["upgrade_cost"] + (row["next_weekly_cost"] - row["weekly_cost"]) * self.cash_buffer_weeks):
+            self._do(management.action(world, balance, "upgrade_department", {"department": department}))
+        if self.focus == "clients":
+            for story in list(world.career_state.stories.values()):
+                if story['status'] == 'active' and story['player_id'] in world.clients:
+                    self._do(careers.action(world, balance, "respond", {"story_id": story['id'], "option_id": "practical"}))
+        if cal.window_open(balance, world.week) and self.focus in ("clients", "deals"):
+            for player in world.client_players():
+                if market.move_busy(world, player.id):
+                    continue
+                clubs = sorted((c for c in world.clubs.values() if c.id != player.club_id), key=lambda c: -c.needs.get(player.position.value, 0))
+                if not clubs:
+                    continue
+                if self.focus == "deals":
+                    self._do(market.action(world, balance, "pitch", {"player_id": player.id, "club_id": clubs[0].id}))
+                elif player.contract and player.seeking_move:
+                    opened = market.action(world, balance, "loan_open", {"player_id": player.id, "club_id": clubs[0].id, "duration": "half_season"})
+                    if self._do(opened):
+                        talk_id = opened.payload['id']
+                        fee = player.contract.wage * market.cfg(balance, "loan_fee_wage_weeks") * .5
+                        proposed = market.action(world, balance, "loan_propose", {"talk_id": talk_id, "contribution_pct": 50, "fee": fee})
+                        if self._do(proposed) and world.market_state.talks[talk_id].status == "agreed":
+                            self._do(market.action(world, balance, "loan_accept", {"talk_id": talk_id}))
+                        else:
+                            self._do(market.action(world, balance, "loan_cancel", {"talk_id": talk_id}))
+                break  # at most one proactive market action per week
+        return self.events
+
+
+class GrowthExpansionPolicy(ExpansionPolicy):
+    focus = "growth"
+
+
+class ClientExpansionPolicy(ExpansionPolicy):
+    focus = "clients"
+
+
+class DealExpansionPolicy(ExpansionPolicy):
+    focus = "deals"
+
+
 ALL_POLICIES: Dict[str, type] = {
     "cautious": CautiousPolicy,
     "balanced": BalancedPolicy,
     "greedy": GreedyPolicy,
     "reckless": RecklessPolicy,
     "passive": PassivePolicy,
+    "expansion_growth": GrowthExpansionPolicy,
+    "expansion_clients": ClientExpansionPolicy,
+    "expansion_deals": DealExpansionPolicy,
 }
 
 

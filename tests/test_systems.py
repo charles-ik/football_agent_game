@@ -147,6 +147,7 @@ def test_insolvency_warns_before_it_downsizes(world, balance):
     scouts_before = len(world.scouts)
     kinds = []
     for _ in range(3):
+        world.week += 1
         kinds.extend(e.kind for e in finance.run(world, random.Random(1), balance))
     assert "finance.cash_warning" in kinds
     assert len(world.scouts) == scouts_before
@@ -155,6 +156,7 @@ def test_insolvency_warns_before_it_downsizes(world, balance):
 def test_sustained_insolvency_forces_a_downsize(world, balance):
     world.agency.cash = -50_000.0
     for _ in range(balance.i("finance.insolvency_downsize_weeks") + 1):
+        world.week += 1
         finance.run(world, random.Random(1), balance)
     assert world.agency.weeks_insolvent >= balance.i("finance.insolvency_downsize_weeks")
     assert len(world.scouts) == 0 or world.agency.hq_level == 1
@@ -165,6 +167,7 @@ def test_the_run_ends_only_after_a_long_insolvency(world, balance):
     for _ in range(balance.i("finance.insolvency_game_over_weeks") + 2):
         if world.game_over:
             break
+        world.week += 1
         finance.run(world, random.Random(1), balance)
     assert world.game_over
 

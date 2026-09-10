@@ -3,8 +3,7 @@
 A football agent management game. You run an agency: scout talent on incomplete
 information, sign clients, and take your cut of their moves.
 
-This is the **Python prototype**, and its job is narrow and deliberate — to find
-out whether the core mechanics are any good. The iOS version is a later,
+The **Python simulation and Next.js web game** explore agency building, client careers and transfer strategy. The iOS version is a later,
 deliberate rewrite. The rules and the tuned numbers are the asset; the terminal
 UI is disposable.
 
@@ -55,12 +54,15 @@ decisions would evaporate.
 | [docs/v1-python-build-plan.md](docs/v1-python-build-plan.md) | The full design, the reasoning behind each decision, and what was deliberately deferred |
 | [documentation/](documentation/README.md) | What was actually shipped: the web design system, the app shell, and the decisions model |
 
+## Agency expansion
+
+The illustrated office now connects staff, departments, client stories, club relationships and loans. See [the expansion guide](documentation/features/agency-expansion.md) for mechanics, save migration and balance observations. Run `make dev` with the project virtual environment active to open the web game.
+
 ## Status
 
-v1 is implemented and playable. ~50 tests pass, including two design guards: the
+The expanded game is implemented and playable, with engine, API and browser tests including two design guards: the
 negotiation must not be trivially solvable, and greed must not dominate.
 
-Deliberately **not** in v1: the Upgrades screen (properties and vehicles), loan
-deals, multiple countries, continental competition, real squads with AI-to-AI
+Deliberately **not** in v1: the Upgrades screen (properties and vehicles), multiple countries, continental competition, real squads with AI-to-AI
 transfers, and split club/player reputation. Each is recorded in the build plan
 with the reason.

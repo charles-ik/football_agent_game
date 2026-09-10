@@ -3,15 +3,17 @@
 // certainty before you have to commit.
 
 import { EmptyState, PanelSection, ScreenHeader } from "@/components/ui";
+import { getManagement } from "@/lib/management-api";
 import { getCandidates, getMeta, getScouting } from "@/lib/api";
 
 import { ReportsTable, ScoutManager } from "./scouting-panels";
 
 export default async function ScoutingPage() {
-  const [scouting, candidates, meta] = await Promise.all([
+  const [scouting, candidates, meta, management] = await Promise.all([
     getScouting(),
     getCandidates(),
     getMeta(),
+    getManagement(),
   ]);
 
   return (
@@ -34,7 +36,7 @@ export default async function ScoutingPage() {
               className="border-0"
             />
           ) : (
-            <ReportsTable reports={scouting.reports} />
+            <ReportsTable shortlisted={management.shortlisted_players} reports={scouting.reports} />
           )}
         </PanelSection>
       </div>

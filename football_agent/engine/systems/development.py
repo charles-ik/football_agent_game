@@ -162,6 +162,8 @@ def season_rollover(world: World, r: random.Random, balance: Balance) -> List[Ev
 
 
 def _retire(world: World, player: Player) -> None:
+    from ..market import return_loan
+    return_loan(world, player.id)
     player.retired = True
     if player.club_id is not None and player.contract:
         club = world.clubs.get(player.club_id)

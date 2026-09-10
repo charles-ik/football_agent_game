@@ -29,10 +29,35 @@ from ..models import FinanceWeek, World
 from ..world import hq_level
 
 
+def _current_ledger(world: World) -> FinanceWeek:
+    """Actions and the weekly settlement share one ledger for each week."""
+    ledger = next((row for row in reversed(world.finance_history) if row.week == world.week), None)
+    if ledger is None:
+        ledger = FinanceWeek(week=world.week)
+        world.finance_history.append(ledger)
+        world.finance_history[:] = world.finance_history[-260:]
+    return ledger
+
+
+def record_commission(world: World, amount: float) -> None:
+    """Record income already credited by a completed transfer or loan."""
+    _current_ledger(world).commission += amount
+
+
+def record_investment(world: World, amount: float) -> None:
+    """Record a purchase already deducted from cash, including lifetime costs."""
+    _current_ledger(world).investments += amount
+    world.agency.total_costs += amount
+
+
 def run(world: World, r: random.Random, balance: Balance) -> List[Event]:
     events: List[Event] = []
     week = world.week
-    ledger = FinanceWeek(week=week)
+    ledger = _current_ledger(world)
+    if ledger.operating_posted or any((ledger.retainers, ledger.scout_wages, ledger.hq_cost, ledger.region_costs, ledger.support_cost)):
+        # Older saves have running entries but predate the explicit marker.
+        ledger.operating_posted = True
+        return []
 
     # Income: a small retainer on each client's wages. Covers the lights, no more.
     for player in world.client_players():
@@ -42,16 +67,18 @@ def run(world: World, r: random.Random, balance: Balance) -> List[Event]:
     # Outgoings: HQ, scout wages, and the cost of keeping scouts in regions.
     level = hq_level(balance, world.agency.hq_level)
     ledger.hq_cost = level.weekly_cost
+    from ..agency_management import support_cost
+    ledger.support_cost = support_cost(world)
     for scout in world.scouts.values():
         ledger.scout_wages += scout.wage
         if scout.region_id and scout.region_id in world.regions:
             ledger.region_costs += world.regions[scout.region_id].scouting_cost
 
-    world.agency.cash += ledger.net
-    world.agency.total_costs += ledger.expenditure
-    world.finance_history.append(ledger)
-    if len(world.finance_history) > 260:
-        world.finance_history = world.finance_history[-260:]
+    running_costs = ledger.scout_wages + ledger.hq_cost + ledger.region_costs + ledger.support_cost
+    running_net = ledger.retainers - running_costs
+    world.agency.cash += running_net
+    world.agency.total_costs += running_costs
+    ledger.operating_posted = True
 
     if ledger.retainers > 0:
         events.append(
@@ -66,12 +93,12 @@ def run(world: World, r: random.Random, balance: Balance) -> List[Event]:
     events.append(
         ev(
             COSTS_PAID,
-            f"Running costs: {format_money(ledger.expenditure)} "
-            f"(net {format_money(ledger.net)})",
+            f"Running costs: {format_money(running_costs)} "
+            f"(net {format_money(running_net)})",
             week,
             Severity.INFO,
-            amount=ledger.expenditure,
-            net=ledger.net,
+            amount=running_costs,
+            net=running_net,
         )
     )
 
@@ -136,6 +163,17 @@ def _downsize(world: World, balance: Balance) -> List[Event]:
     agency = world.agency
     hit = balance.f("finance.downsize_reputation_hit")
 
+    if world.agency_development.staff:
+        victim = max(world.agency_development.staff, key=lambda member: member.wage)
+        world.agency_development.staff.remove(victim)
+        reputation.lose(world, balance, hit)
+        return [ev(FORCED_DOWNSIZE, f"Could not make payroll: {victim.name} was let go.", week, Severity.CRITICAL)]
+    if any(world.agency_development.departments.values()):
+        department = max(world.agency_development.departments, key=world.agency_development.departments.get)
+        world.agency_development.departments[department] -= 1
+        reputation.lose(world, balance, hit)
+        return [ev(FORCED_DOWNSIZE, f"Cut back the {department.replace('_', ' ')} department.", week, Severity.CRITICAL)]
+
     if world.scouts:
         victim = max(world.scouts.values(), key=lambda s: s.wage + _region_cost(world, s))
         del world.scouts[victim.id]
@@ -196,7 +234,8 @@ def _region_cost(world: World, scout) -> float:
 def weekly_burn(world: World, balance: Balance) -> float:
     """Projected net cash movement per week, for the Finances screen."""
     level = hq_level(balance, world.agency.hq_level)
-    out = level.weekly_cost
+    from ..agency_management import support_cost
+    out = level.weekly_cost + support_cost(world)
     for scout in world.scouts.values():
         out += scout.wage + _region_cost(world, scout)
     income = sum(

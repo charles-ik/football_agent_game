@@ -1,5 +1,7 @@
 # The design system
 
+Updated 2026-09-10: the agency expansion uses evergreen surfaces, warm office materials, a serif office headline, and a selectable agency accent. The original console specification below records the earlier design; current token values are authoritative in `web/app/globals.css`. See [agency expansion](../features/agency-expansion.md).
+
 Everything visual lives in two files: `web/app/globals.css` (tokens) and
 `web/components/ui.tsx` (primitives). If a screen is reaching for a raw class
 string to build a panel, a table header or a badge, that is a bug — the point of

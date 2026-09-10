@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { useRouter } from "next/navigation";
 
 import { useToast } from "@/components/toaster";
@@ -13,6 +14,8 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
   const [name, setName] = useState("Marchant Management");
+  const [emblem, setEmblem] = useState("shield");
+  const [accent, setAccent] = useState("emerald");
   const [seed, setSeed] = useState("");
   const [slot, setSlot] = useState("autosave");
 
@@ -30,8 +33,9 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
         }
         // newGame() redirects to /new-game/created on success — this call
         // never returns normally when it works.
-        await newGame(name.trim() || "Your Agency", parsedSeed, slot.trim());
+        await newGame(name.trim() || "Your Agency", parsedSeed, slot.trim(), emblem, accent);
       } catch (error) {
+        if (isRedirectError(error)) throw error;
         toast(error instanceof Error ? error.message : "Could not start the game.", "bad");
       }
     });
@@ -48,6 +52,7 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
         await loadGame(target);
         router.push("/");
       } catch (error) {
+        if (isRedirectError(error)) throw error;
         toast(error instanceof Error ? error.message : "Could not load that save.", "bad");
       }
     });
@@ -71,6 +76,10 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
             maxLength={48}
           />
         </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-sm">Agency emblem<select value={emblem} onChange={e=>setEmblem(e.target.value)} className={inputClass}>{['shield','star','crown','globe'].map(x=><option key={x}>{x}</option>)}</select></label>
+          <label className="text-sm">Agency colour<select value={accent} onChange={e=>setAccent(e.target.value)} className={inputClass}>{['emerald','blue','amber','violet'].map(x=><option key={x}>{x}</option>)}</select></label>
+        </div>
         <label className="block text-sm">
           <span className="t-label mb-1.5 block">Seed (optional)</span>
           <input
@@ -93,7 +102,7 @@ export function NewGameForm({ saves }: { saves: SaveSlot[] }) {
             maxLength={32}
           />
           <span className="t-note mt-1.5 block">
-            Lowercase letters, numbers and dashes. The game autosaves here after every week.
+            Lowercase letters, numbers and dashes. The game autosaves here after every successful action.
           </span>
         </label>
         <button

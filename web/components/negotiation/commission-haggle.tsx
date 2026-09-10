@@ -46,6 +46,7 @@ export function CommissionHaggle({
       try {
         onUpdate(await fn());
       } catch (error) {
+        if (error instanceof Error && error.message.startsWith("Those talks have lapsed")) onClose();
         toast(error instanceof Error ? error.message : "Something broke.", "bad");
       }
     });
@@ -141,7 +142,7 @@ export function CommissionHaggle({
               />
               <span className="text-xs text-faint">%</span>
               <button
-                onClick={() => run(() => proposePct(neg.id, pct))}
+                onClick={() => run(() => proposePct(neg.id, pct, neg.revision))}
                 disabled={pending}
                 className={cn(buttonClass.primary, "ml-auto")}
               >
@@ -168,7 +169,7 @@ export function CommissionHaggle({
                     can end the conversation with nothing. */}
                 {!finalRound && (
                   <button
-                    onClick={() => run(() => proposePct(neg.id, pct))}
+                    onClick={() => run(() => proposePct(neg.id, pct, neg.revision))}
                     disabled={pending}
                     className={buttonClass.ghost}
                   >
@@ -176,7 +177,7 @@ export function CommissionHaggle({
                   </button>
                 )}
                 <button
-                  onClick={() => run(() => acceptCounter(neg.id))}
+                  onClick={() => run(() => acceptCounter(neg.id, neg.revision))}
                   disabled={pending}
                   className={buttonClass.primary}
                 >
@@ -190,7 +191,7 @@ export function CommissionHaggle({
             <RoundPips round={neg.round} maxRounds={neg.max_rounds} />
             <WalkAwayButton
               disabled={pending}
-              onClick={() => run(() => abandonNegotiation(neg.id))}
+              onClick={() => run(() => abandonNegotiation(neg.id, neg.revision))}
             />
           </div>
         </>

@@ -9,7 +9,12 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
+
+from .events import Event
+from .agency_models import AgencyDevelopment
+from .career_models import CareerState
+from .market_models import MarketState
 
 
 class Position(str, enum.Enum):
@@ -277,7 +282,10 @@ class FinanceWeek:
     commission: float = 0.0
     scout_wages: float = 0.0
     hq_cost: float = 0.0
+    support_cost: float = 0.0
     region_costs: float = 0.0
+    investments: float = 0.0
+    operating_posted: bool = False
 
     @property
     def income(self) -> float:
@@ -285,7 +293,7 @@ class FinanceWeek:
 
     @property
     def expenditure(self) -> float:
-        return self.scout_wages + self.hq_cost + self.region_costs
+        return self.scout_wages + self.hq_cost + self.region_costs + self.support_cost + self.investments
 
     @property
     def net(self) -> float:
@@ -295,6 +303,12 @@ class FinanceWeek:
 @dataclass
 class World:
     seed: int
+    revision: int = 0
+    recent_events: List[Event] = field(default_factory=list)
+    mutation_receipts: Dict[str, Any] = field(default_factory=dict)
+    agency_development: AgencyDevelopment = field(default_factory=AgencyDevelopment)
+    career_state: CareerState = field(default_factory=CareerState)
+    market_state: MarketState = field(default_factory=MarketState)
     week: int = 0                     # absolute week, 0 = before the first tick
     season: int = 1
     agency: Agency = None

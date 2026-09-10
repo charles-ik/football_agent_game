@@ -29,7 +29,7 @@ def run(world: World, r: random.Random, balance: Balance) -> List[Event]:
     if not world.rivals:
         return events
     events.extend(_snap_up_targets(world, r, balance))
-    events.extend(_poach_clients(world, r, balance))
+    # Market warnings give the agent a response window before poaching resolves.
     return events
 
 

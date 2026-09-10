@@ -93,6 +93,9 @@ def open_decisions(world: World, balance: Balance) -> List[Decision]:
         decisions.extend(_agent_contract(world, player_id))
         decisions.extend(_approaches(world, balance, player_id))
 
+    from . import careers, market
+    decisions.extend(careers.open_decisions(world, balance))
+    decisions.extend(market.open_decisions(world, balance))
     decisions.sort(key=_sort_key)
     return decisions
 

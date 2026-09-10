@@ -39,7 +39,11 @@ export function InterestCards({
   useEffect(() => {
     if (autoNegotiate === null) return;
     const interest = detail.interests.find((i) => i.id === autoNegotiate);
-    if (!interest) return;
+    if (!interest) {
+      toast("That opportunity has expired or has already been resolved. Current opportunities are shown below.", "warn");
+      window.history.replaceState(null, "", window.location.pathname);
+      return;
+    }
     if (interest.can_negotiate.ok) {
       setRequest({
         kind: "deal",
@@ -50,6 +54,7 @@ export function InterestCards({
     } else {
       toast(interest.can_negotiate.reason, "warn");
     }
+    window.history.replaceState(null, "", window.location.pathname);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoNegotiate, detail.interests]);
 
@@ -164,12 +169,12 @@ export function ClientActions({ detail }: { detail: ClientDetail }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         {detail.player.seeking_move ? (
-          <ActionButton action={() => stopSeeking(playerId)}>Take him off the market</ActionButton>
+          <ActionButton action={revision => stopSeeking(playerId, revision)}>Take him off the market</ActionButton>
         ) : (
           <>
-            <ActionButton action={() => seekMove(playerId, false)}>Seek a move</ActionButton>
+            <ActionButton action={revision => seekMove(playerId, false, revision)}>Seek a move</ActionButton>
             <ActionButton
-              action={() => seekMove(playerId, true)}
+              action={revision => seekMove(playerId, true, revision)}
               confirm={`Promise ${detail.player.name} a move? It brings clubs in faster — but if nothing lands, he will hold it against you and his trust will fall.`}
             >
               Seek &amp; promise
@@ -182,11 +187,11 @@ export function ClientActions({ detail }: { detail: ClientDetail }) {
           title={detail.can_renew.ok ? "" : detail.can_renew.reason}
           className={buttonClass.secondary}
         >
-          Re-sign him ({detail.agent_contract_weeks_left}w left)
+          Renew representation ({detail.agent_contract_weeks_left}w left)
         </button>
         <ActionButton
           kind="danger"
-          action={() => releaseClient(playerId)}
+          action={revision => releaseClient(playerId, revision)}
           confirm={`Release ${detail.player.name}? You lose the retainer, you lose any commission he would have brought, and word gets round — there is a reputation cost.`}
         >
           Release him

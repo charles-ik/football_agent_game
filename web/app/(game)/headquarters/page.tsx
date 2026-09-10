@@ -48,7 +48,7 @@ export default async function HeadquartersPage() {
         </div>
 
         {hq.next ? (
-          <LevelCard title="Next step up" level={hq.next} compareTo={hq.current} highlight />
+          <LevelCard title="Next step up" level={{...hq.next, upgrade_cost: hq.upgrade_cost!}} compareTo={hq.current} highlight />
         ) : (
           <Panel className="px-4 py-6 text-center">
             <p className="text-sm text-dim">This is as good as it gets.</p>
@@ -63,10 +63,10 @@ export default async function HeadquartersPage() {
             <ActionButton
               kind="primary"
               action={upgradeHq}
-              confirm={`Move into ${hq.next.name} for ${hq.next.upgrade_cost.text}? Your weekly bill rises to ${hq.next.weekly_cost.text}. Over-expanding before a window is how agencies die.`}
+              confirm={`Move into ${hq.next.name} for ${hq.upgrade_cost?.text}? Your weekly bill rises to ${hq.next.weekly_cost.text}. Over-expanding before a window is how agencies die.`}
               disabled={!hq.can_upgrade.ok}
             >
-              Upgrade to {hq.next.name} — {hq.next.upgrade_cost.text}
+              Upgrade to {hq.next.name} — {hq.upgrade_cost?.text}
             </ActionButton>
             {!hq.can_upgrade.ok && <p className="text-xs text-warn">{hq.can_upgrade.reason}</p>}
           </div>

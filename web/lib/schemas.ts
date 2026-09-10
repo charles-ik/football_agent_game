@@ -51,6 +51,7 @@ export const reportSchema = z.object({
 });
 
 export const gameStateSchema = z.object({
+  revision: z.number(),
   agency: z.object({
     name: z.string(),
     cash: moneySchema,
@@ -85,6 +86,7 @@ export const gameStateSchema = z.object({
 });
 
 export const continueSchema = z.object({
+  open_decision_ids: z.array(z.string()),
   state: gameStateSchema,
   events: z.array(eventSchema),
   notable: z.array(eventSchema),
@@ -99,6 +101,7 @@ export const decisionSchema = z.object({
     "contract_expiring",
     "agent_contract_expiring",
     "approach",
+    "career.story", "career.promise", "market.rival", "market.loan",
   ]),
   severity: z.enum(["info", "good", "warning", "critical", "action"]),
   headline: z.string(),
@@ -143,7 +146,8 @@ export const clientRowSchema = z.object({
   player: playerSchema,
   report: reportSchema.nullable(),
   club_name: z.string(),
-  playing_time: z.string(),
+  playing_time: z.enum(["key", "starter", "rotation", "fringe", "reserve"]),
+  concerns: z.array(z.object({text: z.string(), tone: z.enum(["bad", "warn"])})),
   wage: moneySchema.nullable(),
   club_contract_weeks_left: z.number().nullable(),
   commission_pct: z.number(),
@@ -241,6 +245,7 @@ const hqLevelSchema = z.object({
 });
 
 export const hqSchema = z.object({
+  upgrade_cost: moneySchema.nullable(),
   current: hqLevelSchema,
   next: hqLevelSchema.nullable(),
   can_upgrade: z.object({ ok: z.boolean(), reason: z.string() }),
@@ -262,6 +267,8 @@ export const financesSchema = z.object({
       commission: moneySchema,
       scout_wages: moneySchema,
       hq_cost: moneySchema,
+  support_cost: moneySchema,
+  investments: moneySchema,
       region_costs: moneySchema,
       income: moneySchema,
       expenditure: moneySchema,
@@ -319,6 +326,7 @@ export const saveSlotSchema = z.object({
 export const savesSchema = z.object({ slots: z.array(saveSlotSchema) });
 
 export const negotiationSchema = z.object({
+  revision: z.number(),
   id: z.string(),
   kind: z.enum(["signing", "renewal", "deal"]),
   subject: z.string(),
