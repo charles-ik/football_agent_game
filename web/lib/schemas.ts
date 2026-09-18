@@ -254,6 +254,10 @@ export const hqSchema = z.object({
 });
 
 export const financesSchema = z.object({
+  window_open: z.boolean(),
+  weeks_until_window_closes: z.number().nullable(),
+  cash_at_next_window: moneySchema,
+  budget: z.object({retainers: moneySchema, hq_cost: moneySchema, scout_wages: moneySchema, region_costs: moneySchema, support_cost: moneySchema}),
   cash: moneySchema,
   weekly_net: moneySchema,
   total_commission: moneySchema,
@@ -269,6 +273,7 @@ export const financesSchema = z.object({
       hq_cost: moneySchema,
   support_cost: moneySchema,
   investments: moneySchema,
+  investment_returns: moneySchema,
       region_costs: moneySchema,
       income: moneySchema,
       expenditure: moneySchema,

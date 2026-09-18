@@ -154,7 +154,8 @@ def state(world, balance):
         "departments": [{"id": k, "level": d.departments.get(k, 0), "upgrade_cost": v["upgrade_cost"] * (d.departments.get(k, 0) + 1), "weekly_cost": v["weekly_cost"] * d.departments.get(k, 0), "next_weekly_cost": v["weekly_cost"] * (d.departments.get(k, 0) + 1), "quote": quote(v["upgrade_cost"] * (d.departments.get(k, 0) + 1), v["weekly_cost"]), "can_upgrade": d.departments.get(k, 0) < world.agency.hq_level and world.agency.cash >= v["upgrade_cost"] * (d.departments.get(k, 0) + 1)} for k, v in cfg["departments"].items()],
         "specialization": d.specialization, "specialization_options": ["generalist", "youth", "careers", "deals"],
         "can_specialize": (_deals(world) > 0 or world.agency.total_commission > 0) and (d.specialization == "generalist" or cal.season_week(balance, world.week) == 1) and d.specialization_changed_season != world.season,
-        "objective": {"id": d.objective, "season": d.objective_season, "progress": _progress(world), "target": cfg["objectives"][d.objective]["target"], "completed": d.objective_completed},
+        "objective": {"id": d.objective, "season": d.objective_season, "progress": _progress(world), "target": cfg["objectives"][d.objective]["target"], "reward": cfg["objectives"][d.objective]["reward"], "completed": d.objective_completed},
+        "objective_options": [{"id": key, **value} for key, value in cfg["objectives"].items()],
         "reviews": [dict(x) for x in d.reviews], "milestones": dict(d.milestones)}
 
 

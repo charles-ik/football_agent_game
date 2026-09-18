@@ -285,11 +285,12 @@ class FinanceWeek:
     support_cost: float = 0.0
     region_costs: float = 0.0
     investments: float = 0.0
+    investment_returns: float = 0.0
     operating_posted: bool = False
 
     @property
     def income(self) -> float:
-        return self.retainers + self.commission
+        return self.retainers + self.commission + self.investment_returns
 
     @property
     def expenditure(self) -> float:
@@ -301,6 +302,22 @@ class FinanceWeek:
 
 
 @dataclass
+class ShareHolding:
+    shares: int = 0
+    cost_basis: float = 0.0
+
+
+@dataclass
+class InvestmentState:
+    last_week: int = -1
+    prices: Dict[str, float] = field(default_factory=dict)
+    history: List[Dict[str, Any]] = field(default_factory=list)
+    holdings: Dict[str, ShareHolding] = field(default_factory=dict)
+    trades: List[Dict[str, Any]] = field(default_factory=list)
+    realized_gain: float = 0.0
+
+
+@dataclass
 class World:
     seed: int
     revision: int = 0
@@ -309,6 +326,7 @@ class World:
     agency_development: AgencyDevelopment = field(default_factory=AgencyDevelopment)
     career_state: CareerState = field(default_factory=CareerState)
     market_state: MarketState = field(default_factory=MarketState)
+    investments: InvestmentState = field(default_factory=InvestmentState)
     week: int = 0                     # absolute week, 0 = before the first tick
     season: int = 1
     agency: Agency = None

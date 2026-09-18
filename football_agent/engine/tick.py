@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import List
 
 from . import calendar as cal
-from . import agency_management, careers, market
+from . import agency_management, careers, market, investments
 from . import reputation
 from .balance import Balance, load_balance
 from .events import (
@@ -49,6 +49,7 @@ def tick(world: World, balance: Balance | None = None) -> List[Event]:
     agency_management.initialize(world, balance)
     careers.initialize(world, balance)
     market.initialize(world, balance)
+    investments.initialize(world, balance)
     previous_week = world.week
     world.week += 1
     world.season = cal.season_number(balance, world.week)
@@ -66,6 +67,7 @@ def tick(world: World, balance: Balance | None = None) -> List[Event]:
     ]
 
     events.extend(loan_events)
+    events.extend(investments.run(world, balance))
 
     if cal.is_season_start(balance, world.week) and world.week > 1:
         events.extend(_season_rollover(world, balance))

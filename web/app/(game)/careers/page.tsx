@@ -1,3 +1,4 @@
+import { SceneBanner } from "@/components/scene-banner";
 import { CareerPanel } from "@/components/career-panel";
 import { Badge, EmptyState, Panel, ScreenHeader } from "@/components/ui";
 import { getGameState } from "@/lib/api";
@@ -10,10 +11,11 @@ export default async function CareersPage() {
   return (
     <div>
       <ScreenHeader title="Careers & commitments" note="Every player has a next chapter. Keep the plan clear, remember what you promised, and build a relationship that lasts." />
+      <div className="mb-5"><SceneBanner image="career-tunnel" eyebrow="People behind the performances" title="A career is a shared journey." description="Understand their ambition, protect their trust, and help every player find their next chapter."/></div>
       <div className="mb-5 flex flex-wrap gap-2">
         <Badge>Week {careers.week}</Badge><Badge tone={conversations ? "accent" : "neutral"}>{conversations} open conversations</Badge><Badge tone={promises ? "warn" : "neutral"}>{promises} active promises</Badge>
       </div>
-      {careers.clients.length ? <div className="grid items-start gap-5 xl:grid-cols-2">{careers.clients.map((client) => <CareerPanel key={client.player_id} client={client} revision={game.revision} />)}</div> : <EmptyState title="The next chapter starts with a client." hint="Sign a player to build a career plan and begin their agency story." action={{ href: "/scouting", label: "Find a client" }} />}
+      {careers.clients.length ? <div className="grid items-start gap-5 2xl:grid-cols-2">{careers.clients.map((client) => <CareerPanel key={client.player_id} client={client} revision={game.revision} />)}</div> : <EmptyState title="The next chapter starts with a client." hint="Sign a player to build a career plan and begin their agency story." action={{ href: "/scouting", label: "Find a client" }} />}
       <section className="mt-8" aria-labelledby="alumni-heading">
         <h2 id="alumni-heading" className="t-section mb-3">The alumni book</h2>
         {careers.alumni.length ? <div className="grid gap-3 lg:grid-cols-2">{careers.alumni.map((alumnus) => <Panel key={alumnus.player_id} className="p-4">

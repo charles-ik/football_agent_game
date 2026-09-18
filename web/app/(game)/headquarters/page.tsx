@@ -1,3 +1,4 @@
+import { SceneBanner } from "@/components/scene-banner";
 // Premises — the upgrade decision, framed the way it actually bites.
 //
 // The sticker price is not the decision; the weekly bill is. An agency that
@@ -28,6 +29,8 @@ export default async function HeadquartersPage() {
         note="Bigger premises raise your ceilings — more scouts, more clients, sharper reports — and raise your weekly bill to match."
       />
 
+      <SceneBanner image="headquarters" eyebrow="Room to grow" title="A home for your ambition." description="Build the space for a stronger team. More capacity opens doors; a sustainable weekly budget keeps them open."/>
+
       <section className="grid gap-3 sm:grid-cols-2">
         <StatTile label="Weekly net now" value={<Money value={hq.weekly_net_now} signed />} tone={hq.weekly_net_now.amount < 0 ? "bad" : "good"} />
         <StatTile
@@ -40,10 +43,10 @@ export default async function HeadquartersPage() {
         />
       </section>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[1fr_auto_1fr]">
+      <div className="grid items-start gap-4 2xl:grid-cols-[1fr_auto_1fr]">
         <LevelCard title="Current premises" level={hq.current} />
 
-        <div className="hidden self-center text-faint lg:block">
+        <div className="hidden self-center text-faint 2xl:block">
           <ArrowRight size={20} aria-hidden />
         </div>
 

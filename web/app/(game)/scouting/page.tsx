@@ -7,6 +7,7 @@ import { getManagement } from "@/lib/management-api";
 import { getCandidates, getMeta, getScouting } from "@/lib/api";
 
 import { ReportsTable, ScoutManager } from "./scouting-panels";
+import { SceneBanner } from "@/components/scene-banner";
 
 export default async function ScoutingPage() {
   const [scouting, candidates, meta, management] = await Promise.all([
@@ -22,6 +23,7 @@ export default async function ScoutingPage() {
         title="Scouting"
         note="Reports are ranges, never numbers. A better scout, a bigger reputation and more weeks watched all narrow the range — so growth buys precision, and signing is always a bet."
       />
+      <SceneBanner image="scouting-ground" eyebrow="The scouting room" title="Great careers start here." description="Look beyond the obvious. Send your scouts out, follow the promising names, and earn the right to represent them." />
       <div className="space-y-4">
         <ScoutManager scouting={scouting} candidates={candidates} positions={meta.positions} />
         <PanelSection

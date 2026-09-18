@@ -11,7 +11,8 @@ export const managementSchema = z.object({
   finance:z.object({weekly_net:z.number(), runway_weeks:z.number().nullable()}),
   departments:z.array(z.object({id:z.string(), level:z.number(), upgrade_cost:z.number(), weekly_cost:z.number(), next_weekly_cost:z.number(), can_upgrade:z.boolean(), quote:quoteSchema})),
   specialization:z.string(), specialization_options:z.array(z.string()), can_specialize:z.boolean(),
-  objective:z.object({id:z.string(), season:z.number(), progress:z.number(), target:z.number(), completed:z.boolean()}),
+  objective:z.object({id:z.string(), season:z.number(), progress:z.number(), target:z.number(), reward:z.number(), completed:z.boolean()}),
+  objective_options:z.array(z.object({id:z.string(), target:z.number(), reward:z.number()})),
   reviews:z.array(z.object({season:z.number(), objective:z.string(), completed:z.boolean(), progress:z.number(), target:z.number()})),
   milestones:z.record(z.string(), z.number()),
 });

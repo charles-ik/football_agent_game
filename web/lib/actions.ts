@@ -246,3 +246,11 @@ export async function expansionAction(area: "management" | "careers" | "market",
   refresh();
   return actionResultSchema.parse(data);
 }
+
+export async function tradeShares(symbol: string, side: "buy" | "sell", shares: number, revision: number): Promise<ActionResultDTO> {
+  const data = await guard(() => api("/api/investments/trade", {
+    method: "POST", json: { symbol, side, shares }, headers: mutationHeaders(revision),
+  }));
+  refresh();
+  return actionResultSchema.parse(data);
+}

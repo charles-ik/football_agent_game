@@ -5,6 +5,7 @@ design and build plans; this folder records what was actually shipped.
 
 | Document | What it covers |
 | --- | --- |
+| [features/investments.md](features/investments.md) | Fictional stock exchange, trading, fees, portfolio accounting and saves |
 | [features/agency-expansion.md](features/agency-expansion.md) | Agency growth, careers, market/loans, persistence, UI and balance observations |
 | [ui/design-system.md](ui/design-system.md) | Colour, type, surfaces, motion, and the primitives every screen is built from |
 | [ui/app-shell.md](ui/app-shell.md) | The three-zone console layout, navigation, and responsive behaviour |

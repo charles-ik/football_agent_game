@@ -173,3 +173,50 @@ test('agency expansion is usable on desktop and a narrow phone', async ({page}) 
   await page.getByRole('dialog').getByRole('link',{name:'Scouting',exact:true}).click();
   await expect(page).toHaveURL('/scouting');
 });
+
+test('stock trading reconciles cash and remains usable on a phone', async ({page, request}) => {
+  await page.goto('/new-game');
+  await page.getByLabel('Agency name').fill('Investment Agency');
+  await page.getByLabel('Seed (optional)').fill('42');
+  await page.getByLabel(/Save slot/i).fill('stock-e2e');
+  await page.getByRole('button',{name:'Start a new agency'}).click();
+  await page.getByRole('link',{name:'Start week 1'}).click();
+  await page.goto('/investments');
+  const session = (await page.context().cookies()).find(cookie => cookie.name === 'fa_session');
+  const headers = {cookie:`fa_session=${session.value}`};
+  const snapshot = async () => (await request.get('http://127.0.0.1:8100/api/investments',{headers})).json();
+  const before = await snapshot();
+  await page.getByLabel(/Number of shares/).fill('10');
+  await page.getByRole('button',{name:'Review purchase'}).click();
+  await expect(page.getByRole('dialog')).toContainText('£73,995.00');
+  await page.getByRole('button',{name:'Confirm purchase'}).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.getByRole('status').filter({hasText:'Bought 10 FLD'})).toBeVisible();
+  const bought = await snapshot();
+  expect(bought.cash).toBe(before.cash - 1005);
+  expect(bought.stocks[0].shares).toBe(10);
+  await page.reload();
+  await expect(page.getByRole('button',{name:/^Fieldstone Index 10 shares/})).toBeVisible();
+  await page.locator('[data-continue="rail"]').click();
+  await expect(page.getByRole('img',{name:/Fieldstone Index price history/})).toBeVisible();
+  await page.getByRole('button',{name:/^Fieldstone Index 10 shares/}).click();
+  await page.getByRole('button',{name:'Review sale'}).click();
+  await page.getByRole('button',{name:'Confirm sale'}).click();
+  await expect(page.getByRole('status').filter({hasText:'Sold 10 FLD'})).toBeVisible();
+  const sold = await snapshot();
+  expect(sold.stocks[0].shares).toBe(0);
+  expect(sold.realized_gain).toBeCloseTo(-9.6);
+  const finances = await (await request.get('http://127.0.0.1:8100/api/finances',{headers})).json();
+  expect(finances.history.at(-1).investment_returns.amount).toBeCloseTo(995.4);
+  expect(finances.total_commission.amount).toBe(0);
+  await page.setViewportSize({width:360,height:800});
+  for (const route of ['/investments','/finances','/season-review','/headquarters','/clients','/careers','/scouting']) {
+    await page.goto(route);
+    await expect(page.locator('main h1')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), route).toBeTruthy();
+  }
+  await page.goto('/investments');
+  await page.screenshot({path:'/tmp/fa-investments-mobile.png',fullPage:true});
+  await page.getByRole('button',{name:'More',exact:true}).click();
+  await expect(page.getByRole('dialog').getByRole('link',{name:'Stocks',exact:true})).toBeVisible();
+});

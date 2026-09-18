@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse
 
 from football_agent.engine import persistence
 
-from .routers import agency, clients, game, meta, negotiations, scouting, management, careers, market
+from .routers import agency, clients, game, meta, negotiations, scouting, management, careers, market, investments
 from .mutations import install_mutation_boundary
 
 WEB_ORIGIN = os.environ.get("FA_WEB_ORIGIN", "http://localhost:3000")
@@ -70,6 +70,7 @@ def create_app() -> FastAPI:
     app.include_router(management.router, prefix="/api")
     app.include_router(careers.router, prefix="/api")
     app.include_router(market.router, prefix="/api")
+    app.include_router(investments.router, prefix="/api")
     return app
 
 

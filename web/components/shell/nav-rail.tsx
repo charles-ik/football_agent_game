@@ -13,6 +13,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Banknote,
+  ChartNoAxesCombined,
   Building2,
   LayoutDashboard,
   Search,
@@ -34,6 +35,7 @@ export const NAV = [
   { href: "/world", label: "World", key: "6", Icon: Trophy },
   { href: "/market", label: "Market", key: "7", Icon: Handshake },
   { href: "/careers", label: "Careers", key: "8", Icon: Heart },
+  { href: "/investments", label: "Stocks", key: "9", Icon: ChartNoAxesCombined },
 ] as const;
 
 export function NavRail({
@@ -51,7 +53,7 @@ export function NavRail({
   return (
     <nav
       aria-label="Main"
-      className="sticky top-0 z-20 hidden h-screen shrink-0 flex-col border-r border-line bg-panel/60 backdrop-blur md:flex md:w-[68px] xl:w-[212px]"
+      className="sticky top-0 z-20 hidden h-screen shrink-0 flex-col border-r border-line bg-panel/60 backdrop-blur md:flex md:w-[68px] xl:w-[184px] 2xl:w-[212px]"
     >
       <div className="flex h-14 items-center gap-2.5 border-b border-line px-4">
         <span
@@ -113,6 +115,7 @@ export function NavRail({
           );
         })}
       </ul>
+      <Link href="/season-review" aria-current={pathname === "/season-review" ? "page" : undefined} title="Agency record" className="m-2 flex items-center gap-2 rounded-lg border border-line p-3 text-sm text-accent hover:bg-panel-2"><Trophy size={17} className="shrink-0"/><span className="hidden xl:block">Agency record</span></Link>
     </nav>
   );
 }
@@ -123,7 +126,7 @@ export function NavStrip({ counts }: { counts: Record<string, number> }) {
   const [more,setMore] = useState(false);
   const main = NAV.filter(item => ["/", "/clients", "/market"].includes(item.href));
   return <>
-    <nav aria-label="Sections" className="fixed bottom-[108px] left-0 right-0 z-20 grid grid-cols-4 border-t border-line bg-panel/95 px-2 py-1 backdrop-blur md:hidden">
+    <nav aria-label="Sections" className="fixed bottom-0 left-0 right-0 z-30 grid h-[calc(76px+env(safe-area-inset-bottom))] grid-cols-4 pb-[env(safe-area-inset-bottom)] border-t border-line bg-panel/95 px-2 py-1 backdrop-blur md:hidden">
       {main.map(({href,label,Icon})=><Link key={href} href={href} aria-current={pathname===href?"page":undefined} className={cn("flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs",pathname===href?"bg-panel-3 text-accent":"text-dim")}><Icon size={17}/>{label}{(counts[href]??0)>0&&<span className="sr-only">{counts[href]} open decisions</span>}</Link>)}
       <button onClick={()=>setMore(true)} className="flex flex-col items-center gap-1 rounded-lg border border-accent/50 bg-accent/10 px-2 py-2 text-xs font-semibold text-accent shadow-sm"><MoreHorizontal size={17}/>More</button>
     </nav>

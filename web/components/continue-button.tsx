@@ -62,20 +62,20 @@ export function ContinueButton({ pending, revision, decisions = [], variant = "f
   }, []);
 
   return <>
-    <div className={cn(variant === "rail" ? "space-y-2" : "fixed bottom-0 left-0 right-0 z-30 border-t border-line bg-panel/95 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur xl:hidden")}>
-      <div className="flex items-center gap-2">
-        <button onClick={() => setReview(true)} className={cn(buttonClass.secondary, "flex items-center gap-2")} aria-label={`Review ${pending} decisions`}>
+    <div className={cn(variant === "rail" ? "space-y-2" : "fixed bottom-[calc(76px+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-30 border-t border-line bg-panel/95 p-3 pb-3 backdrop-blur xl:hidden")}>
+      <div className="flex min-w-0 items-center gap-2">
+        <button onClick={() => setReview(true)} className={cn(buttonClass.secondary, "flex shrink-0 items-center gap-2 !px-3 !text-sm")} aria-label={`Review ${pending} decisions`}>
           <ListTodo size={16}/><span>{pending} open</span>
         </button>
-        <button data-continue={variant} disabled={busy} onClick={() => void press()} className={cn(buttonClass.primary, "flex flex-1 items-center justify-center gap-2 py-3")} aria-label="Continue to next week">
+        <button data-continue={variant} disabled={busy} onClick={() => void press()} className={cn(buttonClass.primary, "flex min-w-0 flex-1 items-center justify-center gap-2 !px-3 !text-sm py-3")} aria-label="Continue to next week">
           {busy ? <Loader2 size={16} className="animate-spin"/> : <ArrowRight size={16}/>}{busy ? "Advancing…" : "Continue"}
         </button>
       </div>
-      <div className="mt-2 flex items-center justify-between gap-2">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         {automatic ? <button className={buttonClass.danger} onClick={() => {cancel.current = true; setStatus("Stopping after this week…");}}>Stop advancing</button> :
-          <button disabled={busy} onClick={() => pending > 0 ? setReview(true) : void press(true)} className={cn(buttonClass.ghost, "flex items-center gap-1")}><FastForward size={13}/>To next event</button>}
+          <button disabled={busy} onClick={() => pending > 0 ? setReview(true) : void press(true)} className={cn(buttonClass.ghost, "flex items-center gap-1 !px-2 !text-xs")}><FastForward size={13}/>To next event</button>}
         <span role="status" className="text-xs text-faint">{status || "One turn · one week"}</span>
-        {summary.length > 0 && <button onClick={() => setStatus(status === "briefing" ? "" : "briefing")} className={buttonClass.secondary}>Briefing</button>}
+        {summary.length > 0 && <button onClick={() => setStatus(status === "briefing" ? "" : "briefing")} className={cn(buttonClass.secondary, "!px-2 !text-xs")}>Briefing</button>}
       </div>
     </div>
     <Dialog open={review} onClose={() => setReview(false)} title="This week · your decisions" wide>

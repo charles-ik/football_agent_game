@@ -46,6 +46,10 @@ better, and he rots, stops improving, and turns on you. Without this, moving
 everyone to the richest club would always be correct and half the game's
 decisions would evaporate.
 
+The browser game also includes agency departments, client careers, loans and a
+[fictional stock exchange](documentation/features/investments.md) for investing
+agency cash. Five original illustrations accompany the finance and progression UI.
+
 ## Documentation
 
 | Document | What it covers |

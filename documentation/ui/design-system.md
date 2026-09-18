@@ -159,3 +159,17 @@ width transition. All of it collapses under `prefers-reduced-motion`.
   `aria-label`, so the value survives without sight of the bar.
 - Modals trap focus, restore it on close, and close on Escape.
 - Tables are real tables with `scope="col"` headers.
+
+
+## Editorial artwork and hierarchy (2026-09-18)
+
+Screen titles use the same Georgia serif as the illustrated office, while body
+text retains the readable 20px Geist baseline and numeric fields remain mono.
+The green and ivory surface palette uses green accent shadows and gold attention
+pulses. Panel headings wrap rather than truncate.
+
+`SceneBanner` pairs decorative local football artwork with an opaque-to-transparent
+dark overlay and live HTML copy. The five JPEGs are approximately 2.3 MB combined;
+Next Image serves responsive sizes. Images have empty alt text in decorative
+banners; the new-game image has a descriptive alt. Asset prompts and provenance
+are recorded in `web/public/images/README.md`.

@@ -20,10 +20,19 @@ def test_read_model_is_pure_and_candidates_are_stable():
     before = deepcopy(asdict(world))
     assert management.state(world, balance) == management.state(world, balance)
     assert asdict(world) == before
+
     world.week += 1
     before = deepcopy(asdict(world))
     assert management.state(world, balance)["candidates"] != before["agency_development"]["candidates"]
     assert asdict(world) == before
+
+
+def test_objective_rewards_and_options_come_from_balance():
+    world, balance = setup()
+    state = management.state(world, balance)
+    expected = management.config()["objectives"]
+    assert {row["id"]: {k: row[k] for k in ("target", "reward")} for row in state["objective_options"]} == expected
+    assert state["objective"]["reward"] == expected[state["objective"]["id"]]["reward"]
 
 
 def test_hiring_charges_once_and_enforces_slots():

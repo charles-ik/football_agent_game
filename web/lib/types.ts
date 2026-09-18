@@ -255,6 +255,7 @@ export type FinanceWeekDTO = {
   hq_cost: Money;
   support_cost: Money;
   investments: Money;
+  investment_returns: Money;
   region_costs: Money;
   income: Money;
   expenditure: Money;
@@ -262,6 +263,10 @@ export type FinanceWeekDTO = {
 };
 
 export type FinancesState = {
+  window_open: boolean;
+  weeks_until_window_closes: number | null;
+  cash_at_next_window: Money;
+  budget: { retainers: Money; hq_cost: Money; scout_wages: Money; region_costs: Money; support_cost: Money };
   cash: Money;
   weekly_net: Money;
   total_commission: Money;

@@ -1,3 +1,4 @@
+import { SceneBanner } from "@/components/scene-banner";
 // Clients — the roster.
 
 import { EmptyState, Panel, ScreenHeader } from "@/components/ui";
@@ -19,6 +20,7 @@ export default async function ClientsPage() {
   return (
     <div>
       <ScreenHeader title="Clients" note={note} />
+      <div className="mb-5"><SceneBanner image="career-tunnel" eyebrow="People behind the performances" title="A career is a shared journey." description="Understand their ambition, protect their trust, and help every player find their next chapter."/></div>
       {clients.length === 0 ? (
         <EmptyState
           title="You have no clients."

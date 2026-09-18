@@ -1,5 +1,7 @@
 # The app shell
 
+Updated 2026-09-18: desktop rails use 184px navigation / 292px decisions at 1280–1535px, then 212px / 320px from 1536px. The status bar wraps to keep the calendar readable; capacity metrics appear from 1536px and remain available in the Office below that width. Agency record is always linked from desktop navigation. Phone navigation remains Office, Clients, Market and More, fixed below the Continue panel so variable status height does not overlap the links. Stocks is available in desktop navigation and the More drawer (shortcut 9).
+
 Updated 2026-09-10: `/` is the illustrated office; the prior dashboard lives at `/overview`. Agency, Careers, Market and World join the existing routes. Phone navigation uses Office, Clients, Market and More; every viewport has access to the same decisions drawer. Continue supports bounded event advancement with a shared synchronous guard. The original shell design below is retained as historical context; see [agency expansion](../features/agency-expansion.md).
 
 Defined in `web/app/(game)/layout.tsx`. Three zones, present on every screen in

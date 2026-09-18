@@ -37,8 +37,8 @@
   /* The accent means "this needs a decision" and nothing else. Indigo sits
      clear of all four severity hues, so it can never be misread as a state. */
   --color-accent: #c8b77c; /* 5.6:1 */
-  --color-accent-dim: #3a43a8;
-  --color-accent-deep: #1b1f45;
+  --color-accent-dim: #4b654d;
+  --color-accent-deep: #263d30;
 
   /* Severity — one colour per engine Severity member, no more. */
   --color-good: #4ade80;
@@ -184,10 +184,10 @@ body {
 @keyframes fa-pulse-accent {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgb(110 123 255 / 0.35);
+    box-shadow: 0 0 0 0 rgb(200 183 124 / 0.35);
   }
   50% {
-    box-shadow: 0 0 0 6px rgb(110 123 255 / 0);
+    box-shadow: 0 0 0 6px rgb(200 183 124 / 0);
   }
 }
 
@@ -249,3 +249,15 @@ select option {
 .office-title { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.035em; font-weight: 400; }
 .office-scene { background: #182a23; }
 @media (max-width: 480px) { .office-scene svg { min-height: 220px; object-fit: cover; } }
+
+/* Keep the editorial hierarchy while retaining the established readable body scale. */
+.t-title { font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; font-weight: 400; letter-spacing: -.035em; }
+.scene-banner { min-height: 220px; }
+progress { appearance: none; overflow: hidden; border: 0; border-radius: 99px; background: var(--color-panel-3); }
+progress::-webkit-progress-bar { background: var(--color-panel-3); border-radius: 99px; }
+progress::-webkit-progress-value { background: var(--color-accent); border-radius: 99px; }
+progress::-moz-progress-bar { background: var(--color-accent); border-radius: 99px; }
+@media (max-width: 480px) {
+  .scene-banner { min-height: 200px; }
+  .office-title { overflow-wrap: anywhere; }
+}

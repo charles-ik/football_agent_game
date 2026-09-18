@@ -1,6 +1,7 @@
 // New game — agency name, optional seed, save slot. The seed is explained in
 // one line and shown on the confirmation, so a good world can be replayed.
 
+import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { getGameState, getSaves, isApiError } from "@/lib/api";
@@ -21,8 +22,9 @@ export default async function NewGamePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-4 py-12">
       <header className="mb-8">
+        <div className="relative mb-7 h-52 overflow-hidden rounded-xl border border-line"><Image src="/images/scouting-ground.jpg" alt="A quiet football training ground in the morning light" fill priority sizes="(max-width: 768px) 100vw, 800px" className="object-cover"/></div>
         <p className="t-label mb-2 text-accent">An agency, from nothing</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Football Agent</h1>
+        <h1 className="office-title text-4xl">Football Agent</h1>
         <p className="mt-2 max-w-prose text-sm text-dim">
           Scout on incomplete information, sign clients by negotiating your cut, and manage
           their careers — and their trust in you — for a share of every move.

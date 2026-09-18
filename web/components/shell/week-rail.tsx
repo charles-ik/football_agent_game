@@ -25,7 +25,7 @@ export function WeekRail({
   return (
     <aside
       aria-label="This week"
-      className="sticky top-0 hidden h-screen w-[340px] shrink-0 flex-col border-l border-line bg-panel/40 xl:flex"
+      className="sticky top-0 hidden h-screen w-[292px] 2xl:w-[320px] shrink-0 flex-col border-l border-line bg-panel/40 xl:flex"
     >
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
         <h2 className="t-label">Needs a decision</h2>

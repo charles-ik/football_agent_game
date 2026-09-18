@@ -13,6 +13,37 @@ from football_agent.engine.world import create_world
 from tests.test_market import setup_world, loan
 
 
+def test_live_budget_matches_settlement_and_window_forecast():
+    from api.dto import finances_dto
+    balance = load_balance()
+    world = create_world(42, balance)
+    world.agency.cash = 500000
+    scout = next(iter(world.scouts.values()))
+    assert actions.assign_scout(world, scout.id, "east").ok
+    assert agency_management.action(world, balance, "upgrade_department", {"department": "scouting"}).ok
+    candidate = world.agency_development.candidates[0]
+    assert agency_management.action(world, balance, "hire", {"candidate_id": candidate.id}).ok
+    before = world.agency.cash
+    snapshot = finances_dto(world, balance)
+    budget = snapshot["budget"]
+    net = budget["retainers"]["amount"] - sum(row["amount"] for key, row in budget.items() if key != "retainers")
+    assert snapshot["weekly_net"]["amount"] == pytest.approx(net)
+    assert budget["region_costs"]["amount"] == world.regions["east"].scouting_cost
+    assert budget["support_cost"]["amount"] == candidate.wage + 120
+    assert snapshot["window_open"]
+    assert snapshot["weeks_until_window_closes"] == 9
+    assert snapshot["cash_at_next_window"]["amount"] == pytest.approx(round(before + net * 27, 2))
+    finance.run(world, random.Random(1), balance)
+    assert world.agency.cash - before == pytest.approx(net)
+    world.week = 11
+    closed = finances_dto(world, balance)
+    assert not closed["window_open"]
+    assert closed["weeks_until_window_closes"] is None
+    assert closed["weeks_until_next_window"] == 17
+    world.agency.cash = -10
+    assert finances_dto(world, balance)["weeks_until_broke"] == 0
+
+
 def test_transfer_commission_and_weekly_settlement_reconcile():
     world, balance = setup_world()
     interest = Interest(99, 1, 3, world.week, world.week + 2, 1500, 0, is_renewal=True)

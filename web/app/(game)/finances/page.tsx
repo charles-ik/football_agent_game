@@ -1,159 +1,63 @@
-// Finances — solvency, and how long you have.
-//
-// The runway line is the point of this screen, and it used to be actively
-// misleading: it announced "at this rate you run out in 1225 weeks" in red,
-// which is 23 years away and not a warning at all. A runway is only news when
-// you could plausibly hit it, so it is stated in seasons once it is far off and
-// only turns red when it is genuinely close.
-
+import Link from "next/link";
+import { ArrowUpRight, Wallet } from "lucide-react";
 import { Money } from "@/components/money";
-import { Panel, PanelSection, ScreenHeader, StatTile, Table, Td, Th, cn } from "@/components/ui";
+import { SceneBanner } from "@/components/scene-banner";
+import { Panel, PanelSection, ScreenHeader, StatTile, Table, Td, Th } from "@/components/ui";
 import { getFinances } from "@/lib/api";
 import type { FinanceWeekDTO } from "@/lib/types";
 
 export default async function FinancesPage() {
   const finances = await getFinances();
-  const burning = finances.weekly_net.amount < 0;
-  const weeks = finances.weeks_until_broke;
-
-  // Below a season: alarming. Below two: worth watching. Beyond that it is a
-  // fact about the business, not a threat, so it stops shouting.
-  const tone = !burning || weeks === null ? "good" : weeks <= 26 ? "bad" : weeks <= 52 ? "warn" : "default";
-  const runwayText =
-    !burning || weeks === null
-      ? "—"
-      : weeks <= 104
-        ? `${weeks}w`
-        : `${Math.round(weeks / 52)} seasons`;
-
-  return (
-    <div className="space-y-5">
-      <ScreenHeader
-        title="Finances"
-        note="Commission arrives in lumps and only inside a window; costs arrive every single week. The gap between those two facts is the whole game."
-      />
-
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile label="Cash" value={<Money value={finances.cash} />} />
-        <StatTile
-          label="Weekly net"
-          value={<Money value={finances.weekly_net} signed />}
-          tone={burning ? "bad" : "good"}
-        />
-        <StatTile
-          label="Runway"
-          value={runwayText}
-          tone={tone === "default" ? "default" : tone}
-          sub={
-            !burning
-              ? "You are earning more than you spend."
-              : weeks !== null && weeks <= 104
-                ? "At the current burn rate."
-                : "Comfortable at the current burn rate."
-          }
-        />
-        <StatTile
-          label="Next window"
-          value={`${finances.weeks_until_next_window}w`}
-          sub="Retainers continue; new deal commission depends on the window."
-        />
-      </section>
-
-      {burning && weeks !== null && weeks <= 52 && (
-        <Panel tone={weeks <= 26 ? "bad" : "warn"} className="px-4 py-3">
-          <p className={cn("text-sm font-medium", weeks <= 26 ? "text-bad" : "text-warn")}>
-            At this rate you run out in <span className="num">{weeks}</span> weeks, and the next
-            window is <span className="num">{finances.weeks_until_next_window}</span> weeks away.
-          </p>
-          <p className="t-note mt-1">
-            {weeks <= finances.weeks_until_next_window
-              ? "You will not survive to the next window without cutting costs. Dismiss a scout, pull one out of an expensive region, or accept a smaller deal now."
-              : "You will reach the window, but with little margin. One deal has to land."}
-          </p>
-        </Panel>
-      )}
-
-      <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
-        <PanelSection title="Week by week" bodyClassName="p-0">
-          {finances.history.length === 0 ? (
-            <p className="t-note px-4 py-4">No weeks have run yet.</p>
-          ) : (
-            <Table>
-              <thead>
-                <tr>
-                  <Th align="right">Week</Th>
-                  <Th align="right">Retainers</Th>
-                  <Th align="right">Commission</Th>
-                  <Th align="right">Scouts</Th>
-                  <Th align="right">Premises</Th>
-                  <Th align="right">Regions</Th>
-                  <Th align="right">Support team</Th><Th align="right">Investments</Th>
-                  <Th align="right">Net</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...finances.history].reverse().map((week) => (
-                  <tr key={week.week} className="transition-colors hover:bg-panel-2">
-                    <Td align="right" className="num text-faint">
-                      {week.week}
-                    </Td>
-                    <Td align="right">
-                      <Money value={week.retainers} />
-                    </Td>
-                    <Td align="right">
-                      <span className={week.commission.amount > 0 ? "text-good" : ""}>
-                        <Money value={week.commission} />
-                      </span>
-                    </Td>
-                    <Td align="right" className="text-dim">
-                      <Money value={week.scout_wages} />
-                    </Td>
-                    <Td align="right" className="text-dim">
-                      <Money value={week.hq_cost} />
-                    </Td>
-                    <Td align="right" className="text-dim">
-                      <Money value={week.region_costs} />
-                    </Td>
-                    <Td align="right"><Money value={week.support_cost}/></Td><Td align="right"><Money value={week.investments}/></Td>
-                    <Td align="right" className="font-medium">
-                      <Money value={week.net} signed />
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
+  const { budget, cash, weekly_net, weeks_until_broke: weeks } = finances;
+  const burning = weekly_net.amount < 0;
+  const insolvent = cash.amount < 0;
+  const costs = [
+    { label: "Scout wages", value: budget.scout_wages, href: "/scouting" },
+    { label: "Scouting regions", value: budget.region_costs, href: "/scouting" },
+    { label: "Premises", value: budget.hq_cost, href: "/headquarters" },
+    { label: "Staff & departments", value: budget.support_cost, href: "/agency" },
+  ];
+  const spending = costs.reduce((total, row) => total + row.value.amount, 0);
+  const coverage = spending > 0 ? Math.round(budget.retainers.amount / spending * 100) : 100;
+  const runway = insolvent ? "Overdrawn" : weeks === null ? "Self-funding" : weeks > 104 ? `${Math.round(weeks / 52)} seasons` : `${weeks} weeks`;
+  return <div className="space-y-5">
+    <ScreenHeader title="Finances" note="Know what keeps the lights on, what each week costs, and how much room you have for your next move." />
+    <SceneBanner image="agency-desk" eyebrow="The business behind the game" title="Make every deal count." description="Retainers build a foundation. Commission funds your ambition. Keep enough in reserve to reach the next opportunity." />
+    <section className="grid grid-cols-2 gap-3 2xl:grid-cols-4">
+      <StatTile label="Agency balance" value={<Money value={cash} />} tone={insolvent ? "bad" : "default"} />
+      <StatTile label="Weekly cash flow" value={<Money value={weekly_net} signed />} tone={burning ? "warn" : "good"} sub="Before commission and investments" />
+      <StatTile label="Cash runway" value={runway} tone={insolvent || (weeks !== null && weeks <= 26) ? "bad" : "default"} sub={insolvent ? "Restore a positive balance to recover." : "At today’s income and commitments"} />
+      <StatTile label={finances.window_open ? "Window open" : "Next window"} value={finances.window_open ? (finances.weeks_until_window_closes === 0 ? "Final week" : `${finances.weeks_until_window_closes}w left`) : `${finances.weeks_until_next_window} weeks`} tone={finances.window_open ? "accent" : "default"} sub={finances.window_open ? "Review live opportunities before advancing." : "Prepare your client moves now."} />
+    </section>
+    {insolvent && <Panel tone="bad" className="p-4"><h2 className="text-sm font-semibold text-bad">Your agency is overdrawn</h2><p className="t-note mt-1">Positive weekly income alone does not clear insolvency. Restore your cash balance before further weeks trigger forced cuts or closure.</p><Link href="/agency" className="mt-2 inline-block text-sm text-accent underline">Review your commitments</Link></Panel>}
+    <div className="grid items-start gap-4 2xl:grid-cols-2">
+      <PanelSection title="Your weekly budget" note="Live commitments, updated whenever you hire, assign or upgrade.">
+        <dl>
+          <div className="flex items-center justify-between gap-3 border-b border-line pb-3"><dt className="text-sm">Client retainers</dt><dd className="text-good"><Money value={budget.retainers} /></dd></div>
+          {costs.map(row => <div key={row.label} className="flex items-center justify-between gap-3 border-b border-line/50 py-3"><dt><Link href={row.href} className="inline-flex items-center gap-1 text-sm text-dim hover:text-accent">{row.label}<ArrowUpRight size={13} /></Link></dt><dd className="text-sm"><Money value={row.value} /></dd></div>)}
+          <div className="flex items-center justify-between gap-3 pt-3"><dt className="text-sm font-semibold">Weekly net</dt><dd><Money value={weekly_net} signed /></dd></div>
+        </dl>
+        <div className="mt-5 rounded-lg bg-panel-2 p-3"><p className="text-sm">Retainers cover <span className="num text-accent">{coverage}%</span> of running costs</p><progress aria-label="Running costs covered by retainers" value={Math.min(coverage,100)} max={100} className="mt-2 h-2 w-full accent-[var(--color-accent)]"/><p className="t-note mt-1">{burning ? "The remainder comes from your cash reserve and completed deals." : "Current retainers cover your recurring commitments."}</p></div>
+      </PanelSection>
+      <div className="space-y-4">
+        <PanelSection title="Plan for the next window" actions={<Wallet size={18} className="text-accent" />}>
+          <p className="t-note">Projected cash in {finances.weeks_until_next_window} weeks</p>
+          <p className={`num mt-2 text-3xl ${finances.cash_at_next_window.amount < 0 ? "text-bad" : "text-fg"}`}><Money value={finances.cash_at_next_window} /></p>
+          <p className="mt-3 text-sm text-dim">{finances.cash_at_next_window.amount < 0 ? "Your current commitments outlast your reserve. Reduce overheads or secure income before then." : "Your current reserve reaches the next opening. Leave room for new wages before you invest."}</p>
+          <p className="t-note mt-3">Projection holds today’s retainers and costs constant. Future deals, trades, purchases, departures and forced cuts are excluded.</p>
+          <div className="mt-4 flex flex-wrap gap-4"><Link href="/market" className="text-sm text-accent hover:underline">Find a deal ↗</Link><Link href="/agency" className="text-sm text-accent hover:underline">Manage overheads ↗</Link><Link href="/investments" className="text-sm text-accent hover:underline">Invest agency cash ↗</Link></div>
         </PanelSection>
-
-        <div className="space-y-4">
-          <PanelSection title="Net per week" note="Commission spikes; costs are constant.">
-            {finances.history.length < 2 ? (
-              <p className="t-note">Not enough weeks to plot yet.</p>
-            ) : (
-              <NetChart history={finances.history} />
-            )}
-          </PanelSection>
-
-          <PanelSection title="Lifetime">
-            <dl className="space-y-1">
-              <div className="flex items-baseline justify-between border-b border-line/50 py-1.5">
-                <dt className="text-xs text-dim">Commission earned</dt>
-                <dd className="text-sm text-good">
-                  <Money value={finances.total_commission} />
-                </dd>
-              </div>
-              <div className="flex items-baseline justify-between py-1.5">
-                <dt className="text-xs text-dim">Costs paid</dt>
-                <dd className="text-sm text-dim">
-                  <Money value={finances.total_costs} />
-                </dd>
-              </div>
-            </dl>
-          </PanelSection>
-        </div>
+        <PanelSection title="Recent cash movement" note="Completed weeks include commission and investments.">
+          {finances.history.length < 2 ? <p className="t-note">Your cash-flow chart starts after two ledger entries. The live budget is available from day one.</p> : <NetChart history={finances.history} />}
+          <div className="mt-3 flex gap-4 text-xs text-dim"><span><span className="text-good">↑</span> Cash gained</span><span><span className="text-bad">↓</span> Cash spent</span></div>
+        </PanelSection>
       </div>
     </div>
-  );
+    <section className="grid gap-3 sm:grid-cols-2"><StatTile label="Lifetime commission" value={<Money value={finances.total_commission}/>} tone="good"/><StatTile label="Lifetime costs" value={<Money value={finances.total_costs}/>} sub="Running costs, agency investments and share purchases"/></section>
+    <PanelSection title="The ledger" note="Every recorded cash movement. Latest week first." bodyClassName="p-0">
+      {!finances.history.length ? <p className="t-note p-4">Your first investment or completed week starts the ledger.</p> : <Table><thead><tr>{["Week","Retainers","Commission","Scouts","Premises","Regions","Support","Investments","Share sales","Net"].map(label=><Th key={label} align="right">{label}</Th>)}</tr></thead><tbody>{[...finances.history].reverse().map(week=><tr key={week.week} className="hover:bg-panel-2"><Td align="right" className="num">{week.week}</Td>{(["retainers","commission","scout_wages","hq_cost","region_costs","support_cost","investments","investment_returns","net"] as const).map(key=><Td key={key} align="right"><Money value={week[key]} signed={key==="net"}/></Td>)}</tr>)}</tbody></Table>}
+    </PanelSection>
+  </div>;
 }
 
 /**

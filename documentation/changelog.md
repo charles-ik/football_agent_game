@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-18 — Finance, progression, stock exchange and visual review
+
+- **Added:** live weekly budget, retainer coverage, and an explicitly conditional cash forecast to the next transfer window.
+- **Fixed:** finances now shows when the current transfer window is open and flags overdrawn cash independently of weekly profitability. Forecasts and settlements share one budget calculation.
+- **Changed:** seasonal ambitions show configured rewards, requirements and next actions across Office, Agency and the agency record. Unearned milestones now explain their requirements and unlocks.
+- **Added:** a fictional stock exchange with five listings, weekly seeded prices, cash-backed buy/sell trades, review dialogs, fees, saved portfolios and realized/unrealized gains. Share sale proceeds are separate from football commission.
+- **Added:** five original illustrations across Scouting, Market, Finances, Clients, Careers, Premises, Stocks and new-game screens.
+- **Changed:** narrower desktop rails, wrapping status bar, editorial headings, consistent green/gold accents and a permanent agency-record link. The established 20px body scale remains.
+- **Fixed:** hover movement no longer destabilizes action buttons; mobile navigation sits below Continue without overlap, and market controls fit narrow screens.
+
+- **Validated:** 143 engine/API tests passed (2 existing skips), 36 UI tests, TypeScript and production build. All 5 browser scenarios passed, including stock trades, save reload, finance reconciliation and 360px layout checks.
+
 ## 2026-09-10 — Readability and action clarity
 
 - **Changed:** the browser UI now uses a 20px root type size, six pixels larger than the previous baseline. Small fixed-size captions were raised by the same amount so navigation, tables, status rails, dialogs and supporting text scale together.

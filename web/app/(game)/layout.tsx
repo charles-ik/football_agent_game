@@ -64,7 +64,7 @@ export default async function GameLayout({ children }: { children: ReactNode }) 
       <div className="flex min-w-0 flex-1 flex-col">
         <StatusBar state={state} />
         <NavStrip counts={navCounts} />
-        <main className="min-w-0 flex-1 px-4 py-5 pb-48 md:pb-28 md:px-6 xl:pb-6">
+        <main className="min-w-0 flex-1 px-4 py-5 pb-72 md:pb-40 md:px-6 xl:pb-6">
           <div className="mx-auto w-full max-w-[1400px]">{children}</div>
         </main>
       </div>

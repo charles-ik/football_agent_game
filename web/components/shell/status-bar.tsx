@@ -22,14 +22,14 @@ export function StatusBar({ state }: { state: GameState }) {
   // "you run out in 1225 weeks" is noise dressed up as a warning.
   const runway =
     burning && weekly_net.amount !== 0
-      ? Math.floor(agency.cash.amount / Math.abs(weekly_net.amount))
+      ? Math.max(0, Math.floor(agency.cash.amount / Math.abs(weekly_net.amount)))
       : null;
-  const runwayCritical = runway !== null && runway <= 26;
+  const runwayCritical = agency.cash.amount < 0 || (runway !== null && runway <= 26);
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-line bg-panel/80 px-4 backdrop-blur md:px-5">
+    <header className="sticky top-0 z-20 flex min-h-14 flex-wrap items-center gap-x-4 gap-y-2 py-2 border-b border-line bg-panel/80 px-4 backdrop-blur md:px-5">
       {/* Where you are in the season. */}
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 max-w-full items-center gap-2">
         {calendar.window_open ? (
           <DoorOpen size={15} className="shrink-0 text-accent" aria-hidden />
         ) : (
@@ -44,7 +44,7 @@ export function StatusBar({ state }: { state: GameState }) {
           <div className="truncate text-[17px]">
             {calendar.window_open ? (
               <span className="text-accent">
-                {calendar.window_name} open
+                <span className="hidden sm:inline">{calendar.window_name}</span><span className="sm:hidden">Window</span> open
                 {calendar.weeks_until_window_closes !== null && (
                   <span className="num"> · closes in {calendar.weeks_until_window_closes}w</span>
                 )}
@@ -58,7 +58,7 @@ export function StatusBar({ state }: { state: GameState }) {
         </div>
       </div>
 
-      <div className="ml-auto flex items-center gap-4 md:gap-5">
+      <div className="ml-auto flex items-center gap-3 md:gap-4">
         <Metric label="Cash">
           <Money value={agency.cash} className="text-sm font-semibold" />
         </Metric>
@@ -86,13 +86,13 @@ export function StatusBar({ state }: { state: GameState }) {
           </span>
         </Metric>
 
-        <Metric label="Clients" className="hidden lg:flex">
+        <Metric label="Clients" className="hidden 2xl:flex">
           <span className={cn("num text-sm font-semibold", atClientCap && "text-warn")}>
             {counts.clients}/{counts.client_cap}
           </span>
         </Metric>
 
-        <Metric label="Scouts" className="hidden lg:flex">
+        <Metric label="Scouts" className="hidden 2xl:flex">
           <span className="num text-sm font-semibold">
             {counts.scouts}/{counts.scout_cap}
           </span>

@@ -41,7 +41,7 @@ export function Panel({
   return (
     <As
       className={cn(
-        "rounded-[10px] border bg-panel shadow-[0_1px_0_0_rgb(255_255_255/0.02)_inset]",
+        "min-w-0 rounded-[10px] border bg-panel shadow-[0_1px_0_0_rgb(255_255_255/0.02)_inset]",
         border,
         className,
       )}
@@ -73,7 +73,7 @@ export function PanelSection({
     <Panel tone={tone} className={cn("overflow-hidden", className)} as="section">
       <header className="flex items-center justify-between gap-3 border-b border-line bg-panel-2/60 px-4 py-2.5">
         <div className="min-w-0">
-          <h2 className="t-section truncate">{title}</h2>
+          <h2 className="t-section">{title}</h2>
           {note && <p className="t-note mt-0.5">{note}</p>}
         </div>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
@@ -94,7 +94,7 @@ export function ScreenHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-4">
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         <h1 className="t-title">{title}</h1>
         {note && <p className="t-note mt-1 max-w-prose">{note}</p>}
@@ -138,7 +138,7 @@ export function StatTile({
   return (
     <Panel className={cn("px-4 py-3", className)}>
       <div className="t-label">{label}</div>
-      <div className={cn("num mt-1.5 text-xl font-semibold leading-none", toneClass)}>{value}</div>
+      <div className={cn("num mt-1.5 break-words text-xl font-semibold leading-tight", toneClass)}>{value}</div>
       {sub && <div className="t-note mt-1.5">{sub}</div>}
     </Panel>
   );
@@ -314,15 +314,15 @@ export function Skeleton({ className = "" }: { className?: string }) {
  * ---------------------------------------------------------------------- */
 
 export const inputClass =
-  "w-full rounded-md border border-line bg-panel-2 px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-faint focus:border-accent focus:bg-panel-3";
+  "min-w-0 max-w-full w-full rounded-md border border-line bg-panel-2 px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-faint focus:border-accent focus:bg-panel-3";
 
 export const buttonClass = {
   primary:
-    "min-h-10 rounded-lg border border-accent bg-accent px-4 py-2 text-base font-semibold text-ink shadow-[0_3px_0_0_var(--color-accent-deep),0_8px_18px_rgb(0_0_0/0.22)] transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:bg-[#e2d29a] hover:shadow-[0_4px_0_0_var(--color-accent-deep),0_10px_22px_rgb(0_0_0/0.3)] active:translate-y-0 active:shadow-[0_1px_0_0_var(--color-accent-deep)] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
+    "min-h-10 rounded-lg border border-accent bg-accent px-4 py-2 text-base font-semibold text-ink shadow-[0_3px_0_0_var(--color-accent-deep),0_8px_18px_rgb(0_0_0/0.22)] transition-[background-color,border-color,color,box-shadow] hover:bg-[#e2d29a] hover:shadow-[0_4px_0_0_var(--color-accent-deep),0_10px_22px_rgb(0_0_0/0.3)] active:shadow-[0_1px_0_0_var(--color-accent-deep)] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
   secondary:
-    "min-h-10 rounded-lg border border-accent/65 bg-accent/15 px-4 py-2 text-base font-semibold text-accent shadow-[0_2px_0_0_rgb(0_0_0/0.35),0_6px_14px_rgb(0_0_0/0.16)] transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:border-accent hover:bg-accent/25 hover:text-fg active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
+    "min-h-10 rounded-lg border border-accent/65 bg-accent/15 px-4 py-2 text-base font-semibold text-accent shadow-[0_2px_0_0_rgb(0_0_0/0.35),0_6px_14px_rgb(0_0_0/0.16)] transition-[background-color,border-color,color,box-shadow] hover:border-accent hover:bg-accent/25 hover:text-fg active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
   ghost:
-    "min-h-10 rounded-lg border border-line-strong bg-panel-2/75 px-3 py-2 text-base font-medium text-dim shadow-[0_2px_0_0_rgb(0_0_0/0.25)] transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:border-accent/60 hover:bg-panel-3 hover:text-fg active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
+    "min-h-10 rounded-lg border border-line-strong bg-panel-2/75 px-3 py-2 text-base font-medium text-dim shadow-[0_2px_0_0_rgb(0_0_0/0.25)] transition-[background-color,border-color,color,box-shadow] hover:border-accent/60 hover:bg-panel-3 hover:text-fg active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
   danger:
-    "min-h-10 rounded-lg border border-bad/70 bg-bad/10 px-4 py-2 text-base font-semibold text-bad shadow-[0_2px_0_0_rgb(0_0_0/0.3)] transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:border-bad hover:bg-bad/20 hover:text-fg active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
+    "min-h-10 rounded-lg border border-bad/70 bg-bad/10 px-4 py-2 text-base font-semibold text-bad shadow-[0_2px_0_0_rgb(0_0_0/0.3)] transition-[background-color,border-color,color,box-shadow] hover:border-bad hover:bg-bad/20 hover:text-fg active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:transform-none",
 };

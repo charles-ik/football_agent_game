@@ -35,6 +35,7 @@ ALL_GET_ROUTES = [
     "/api/clients",
     "/api/hq",
     "/api/finances",
+    "/api/investments",
     "/api/leagues",
 ]
 

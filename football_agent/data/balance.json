@@ -193,5 +193,62 @@
     "client_loss_penalty": 1.5,
     "bankruptcy_penalty": 8.0,
     "elite_threshold": 75.0
+  },
+  "investments": {
+    "fee_pct": 0.005,
+    "minimum_fee": 1.0,
+    "max_trade_shares": 1000000,
+    "history_weeks": 52,
+    "trade_history_limit": 100,
+    "weekly_drift": 0.001,
+    "market_volatility": 0.012,
+    "minimum_price": 1.0,
+    "stocks": [
+      {
+        "symbol": "FLD",
+        "name": "Fieldstone Index",
+        "sector": "Diversified fund",
+        "description": "A broad basket of fictional businesses. Smaller weekly swings, still exposed to market falls.",
+        "price": 100.0,
+        "volatility": 0.008,
+        "risk": "Lower"
+      },
+      {
+        "symbol": "NBR",
+        "name": "Northbridge Sportswear",
+        "sector": "Sportswear",
+        "description": "Kits, boots and training equipment. Consumer demand can move the share price in either direction.",
+        "price": 48.0,
+        "volatility": 0.028,
+        "risk": "Medium"
+      },
+      {
+        "symbol": "MTR",
+        "name": "Matchday Media",
+        "sector": "Broadcasting",
+        "description": "Football broadcasting and streaming. Rights cycles bring opportunity and sharp reversals.",
+        "price": 72.0,
+        "volatility": 0.04,
+        "risk": "Higher"
+      },
+      {
+        "symbol": "GRD",
+        "name": "Groundworks Group",
+        "sector": "Infrastructure",
+        "description": "Stadium construction and venue services. A steadier business tied to long-term club investment.",
+        "price": 36.0,
+        "volatility": 0.018,
+        "risk": "Medium"
+      },
+      {
+        "symbol": "ATX",
+        "name": "Atlas Performance",
+        "sector": "Sports technology",
+        "description": "Wearables and performance analytics. A young company with the widest weekly swings.",
+        "price": 24.0,
+        "volatility": 0.06,
+        "risk": "Higher"
+      }
+    ]
   }
 }

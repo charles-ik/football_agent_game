@@ -73,3 +73,31 @@ Engine tests cover capacity, portfolios, quote/cash agreement, promises, read-on
 A 100-seed, five-season comparison ran four scripted policies (400 runs). Initial bankruptcy rates were 15% balanced, 44% growth expansion, 24% client expansion and 37% deal expansion. Median commissions were £435.9k, £250.5k, £1.02m and £389.4k respectively. These compound strategies use distinct policy RNG streams; they do not establish causal effects or optimal play. Staff and department spending needs deliberate cash management, and more human playtesting is required before treating these as final balance numbers.
 
 The proposed five-person usability/fun study has not been performed. Automated tests establish working mechanics and flows, not that every strategy is equally enjoyable.
+
+## Finance and progression review (2026-09-18)
+
+The finance screen exposes the current weekly retainers, scout wages, regional
+costs, premises and support overheads before the first week runs. Its budget
+and the weekly settlement share `systems.finance.weekly_budget`; commissions
+and investments remain separate ledger entries. The next-window forecast is
+current cash plus current weekly net times weeks to the next opening. It holds
+commitments constant and excludes future deals, departures, purchases, share sales and
+forced cuts. The screen distinguishes an open window (including its final
+week) from the next opening, and warns about negative cash even when recurring
+income covers costs.
+
+Office, Agency and the agency record share the same seasonal objective display:
+plain-language action, progress, configured reputation reward and a link to the
+relevant screen. `/api/management` returns objective rewards and all configured
+objective options. Completion still settles on the weekly tick, once per season;
+this pass does not change rewards or save formats. The milestone wall shows all
+four existing milestones before they are earned, with their requirements and
+first-deal specialization unlock. Desktop navigation links directly to the record.
+
+Scouting, Market, Finances, Clients, Careers, Premises, Stocks and the new-game
+screen use five generated editorial illustrations in `web/public/images/`. See that directory's README for provenance
+and exact prompts. The existing office illustration continues to show actual
+headquarters level, staff and earned milestones.
+
+The [stock exchange](investments.md) adds optional investing with agency cash;
+its sale proceeds remain separate from football commission.

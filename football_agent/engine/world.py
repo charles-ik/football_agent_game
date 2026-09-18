@@ -209,10 +209,11 @@ def create_world(seed: int, balance: Balance | None = None, agency_name: str = "
         )
 
     _give_starting_client(world, balance, r)
-    from . import agency_management, careers, market
+    from . import agency_management, careers, market, investments
     agency_management.initialize(world, balance)
     careers.initialize(world, balance)
     market.initialize(world, balance)
+    investments.initialize(world, balance)
     return world
 
 

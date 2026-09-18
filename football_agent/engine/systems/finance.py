@@ -50,6 +50,11 @@ def record_investment(world: World, amount: float) -> None:
     world.agency.total_costs += amount
 
 
+def record_investment_return(world: World, amount: float) -> None:
+    """Record net sale proceeds already credited to cash, never commission."""
+    _current_ledger(world).investment_returns += amount
+
+
 def run(world: World, r: random.Random, balance: Balance) -> List[Event]:
     events: List[Event] = []
     week = world.week
@@ -59,20 +64,9 @@ def run(world: World, r: random.Random, balance: Balance) -> List[Event]:
         ledger.operating_posted = True
         return []
 
-    # Income: a small retainer on each client's wages. Covers the lights, no more.
-    for player in world.client_players():
-        if player.contract:
-            ledger.retainers += weekly_retainer(balance, player.contract.wage)
-
-    # Outgoings: HQ, scout wages, and the cost of keeping scouts in regions.
-    level = hq_level(balance, world.agency.hq_level)
-    ledger.hq_cost = level.weekly_cost
-    from ..agency_management import support_cost
-    ledger.support_cost = support_cost(world)
-    for scout in world.scouts.values():
-        ledger.scout_wages += scout.wage
-        if scout.region_id and scout.region_id in world.regions:
-            ledger.region_costs += world.regions[scout.region_id].scouting_cost
+    budget = weekly_budget(world, balance)
+    for field, amount in budget.items():
+        setattr(ledger, field, amount)
 
     running_costs = ledger.scout_wages + ledger.hq_cost + ledger.region_costs + ledger.support_cost
     running_net = ledger.retainers - running_costs
@@ -231,16 +225,19 @@ def _region_cost(world: World, scout) -> float:
     return 0.0
 
 
-def weekly_burn(world: World, balance: Balance) -> float:
-    """Projected net cash movement per week, for the Finances screen."""
-    level = hq_level(balance, world.agency.hq_level)
+def weekly_budget(world: World, balance: Balance) -> dict[str, float]:
+    """The same current commitments drive forecasts and weekly settlement."""
     from ..agency_management import support_cost
-    out = level.weekly_cost + support_cost(world)
-    for scout in world.scouts.values():
-        out += scout.wage + _region_cost(world, scout)
-    income = sum(
-        weekly_retainer(balance, p.contract.wage)
-        for p in world.client_players()
-        if p.contract
-    )
-    return income - out
+    return {
+        "retainers": sum(weekly_retainer(balance, p.contract.wage) for p in world.client_players() if p.contract),
+        "hq_cost": hq_level(balance, world.agency.hq_level).weekly_cost,
+        "scout_wages": sum(s.wage for s in world.scouts.values()),
+        "region_costs": sum(_region_cost(world, s) for s in world.scouts.values()),
+        "support_cost": support_cost(world),
+    }
+
+
+def weekly_burn(world: World, balance: Balance) -> float:
+    """Projected net cash movement per week, before deals and purchases."""
+    budget = weekly_budget(world, balance)
+    return budget["retainers"] - sum(amount for key, amount in budget.items() if key != "retainers")

@@ -73,11 +73,12 @@ def load_game(body: LoadGameRequest, response: Response) -> Dict[str, Any]:
     if not persistence.exists(save_path):
         raise HTTPException(404, "save_not_found")
     world = persistence.load(save_path)  # SaveError -> 409 via handler
-    from football_agent.engine import agency_management, careers, market
+    from football_agent.engine import agency_management, careers, market, investments
     balance = default_balance()
     agency_management.initialize(world, balance)
     careers.initialize(world, balance)
     market.initialize(world, balance)
+    investments.initialize(world, balance)
     session = store.create(world, balance, save_path, share_existing=True)
     set_session_cookie(response, session.id)
     return {"state": dto.game_state_dto(session)}

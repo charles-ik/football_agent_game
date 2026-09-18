@@ -27,7 +27,7 @@ from football_agent.engine.systems import league as league_system
 from football_agent.engine.systems import scouting as scouting_system
 from football_agent.engine.systems import trust as trust_system
 from football_agent.engine.systems.development import playing_time
-from football_agent.engine.systems.finance import weekly_burn
+from football_agent.engine.systems.finance import weekly_burn, weekly_budget
 from football_agent.engine.world import hq_level, hq_levels
 
 from .session import Session
@@ -436,6 +436,7 @@ def hq_dto(world: World, balance: Balance) -> Dict[str, Any]:
 
 def finances_dto(world: World, balance: Balance) -> Dict[str, Any]:
     burn = weekly_burn(world, balance)
+    budget = weekly_budget(world, balance)
     if burn < 0:
         weeks_until_broke = max(0, int(world.agency.cash / -burn))
     else:
@@ -449,6 +450,7 @@ def finances_dto(world: World, balance: Balance) -> Dict[str, Any]:
             "hq_cost": money(entry.hq_cost),
             "support_cost": money(entry.support_cost),
             "investments": money(entry.investments),
+            "investment_returns": money(entry.investment_returns),
             "region_costs": money(entry.region_costs),
             "income": money(entry.income),
             "expenditure": money(entry.expenditure),
@@ -463,6 +465,10 @@ def finances_dto(world: World, balance: Balance) -> Dict[str, Any]:
         "total_costs": money(world.agency.total_costs),
         "weeks_until_broke": weeks_until_broke,
         "weeks_until_next_window": cal.weeks_until_next_window(balance, world.week),
+        "window_open": cal.window_open(balance, world.week),
+        "weeks_until_window_closes": cal.weeks_until_window_closes(balance, world.week),
+        "budget": {key: money(amount) for key, amount in budget.items()},
+        "cash_at_next_window": money(world.agency.cash + burn * cal.weeks_until_next_window(balance, world.week)),
         "history": history,
     }
 
