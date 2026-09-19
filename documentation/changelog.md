@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-19 — Windows run instructions
+
+- **Added:** exact native Windows PowerShell setup and launch commands for the browser and terminal games, without requiring virtual-environment script activation or Make.
+
 ## 2026-09-18 — Finance, progression, stock exchange and visual review
 
 - **Added:** live weekly budget, retainer coverage, and an explicitly conditional cash forecast to the next transfer window.

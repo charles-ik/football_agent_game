@@ -9,6 +9,7 @@ cd football_agent_game
 ## Requirements
 
 * Python 3.10 or newer (developed against 3.10.9)
+* Node.js 18.18 or newer and npm (browser game only)
 * The engine itself has **zero dependencies** — it is pure standard library. Only
   the CLI and the tests need anything installed.
 
@@ -97,6 +98,45 @@ make web          # Next.js on http://localhost:3000
 Then open **http://localhost:3000**. Start a new agency (note the seed — same
 seed, same world), assign your scout, and press **Continue**. Keyboard: `C`
 continues, `1`–`6` switch screens, `Esc` closes dialogs.
+
+### Windows PowerShell
+
+Install Python 3.10 or newer and Node.js 18.18 or newer, then open PowerShell in
+the repository root. The commands below use the virtual environment directly,
+so PowerShell script activation does not need to be enabled.
+
+One-time setup:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-api.txt
+cd web
+npm ci
+cd ..
+```
+
+For each play session, start the API in one PowerShell window from the
+repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn api.main:app --reload --port 8000 --host 127.0.0.1 --workers 1
+```
+
+Start the web app in a second PowerShell window:
+
+```powershell
+cd web
+npm run dev
+```
+
+Open **http://localhost:3000**. Keep both PowerShell windows running while you
+play.
+
+To play the terminal version instead, run this from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m football_agent.cli.app --new --seed 42
+```
 
 The rules and numbers are identical to the CLI — the API drives
 `engine/actions.py` and nothing else. Two consequences of the architecture
